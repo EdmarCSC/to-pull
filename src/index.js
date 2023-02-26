@@ -479,7 +479,7 @@ function mobileDialogBox() {
     contMain.appendChild(dialogBox)
 }
 
-function dialogBox() {
+function dialogBox() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
     const dialogBox = createComponent('div', 'dialog-box');
     const h1 = createComponent('h3', 'title-dialog-box');
     const btnDialogBox = createComponent('button', 'btn-confirm-dialog-box');
@@ -500,22 +500,6 @@ function dialogBox() {
     contMain.appendChild(dialogBox)
 }
 
-function mobileDialogBox() {
-    const dialogBox = createComponent('div', 'mobile-dialog-box');
-    const mBtnConfirmDialogBox = createComponent('h2', 'm-btn-confirm-dialog-box');
-    const mBtnCloseDialogBox = createComponent('h2', 'm-btn-close-dialog-box');
-
-
-    mBtnConfirmDialogBox.innerHTML = 'Confirmar';
-    mBtnCloseDialogBox.innerHTML = 'Cancelar';
-
-    dialogBox.appendChild(mBtnConfirmDialogBox);
-    dialogBox.appendChild(mBtnCloseDialogBox);
-
-    contMain.appendChild(dialogBox)
-
-}
-
 function compareElementos(element) {
     const controle = element.controle;
     const agenda = element.agenda;
@@ -534,7 +518,7 @@ function compareElementos(element) {
     if (cControle === controle && cAgenda === agenda) return true
     
     return false
-}
+}                                                                                                                                                                                                                                                                                                                                                                                                                           
 
 const refCargaLiberadas = ref(database, 'cargas-liberadas/');
     onValue(refCargaLiberadas, (snapshot) => {
@@ -588,8 +572,6 @@ document.addEventListener('click', e => {
         if (!bodyList.classList.contains('visible')){
             bodyList.classList.add('visible')
         }
-
-
     }
 
     if (el.classList.contains('recebimento')){

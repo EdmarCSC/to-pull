@@ -217,21 +217,50 @@ body {
 .list-data div {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
+    grid-template-areas: "fl ag dc co ma pa dt hr tp";
     justify-items: center;
-    text-align: justify;
+    align-items: center;
     color: var(--two-txt-colorr);
-    border-bottom: 1px solid #00141d31; 
+    border-bottom: 1px solid #00141d31;
     width: 100%;
+    height: 100%;
+}
+
+.cell0 {
+    grid-area: fl;
+}
+.cell1 {
+    grid-area: ag;
+}
+.cell2 {
+    grid-area: dc;
+}
+.cell3 {
+    grid-area: co;
+}
+.cell4 {
+    grid-area: ma;
+}
+.cell5 {
+    grid-area: pa;
+}
+.cell6 {
+    grid-area: dt;
+}
+.cell7 {
+    grid-area: hr;
+}
+.cell8 {
+    position: absolute;
+    z-index: -20px;
+    visibility: hidden;
+}
+.cell9 {
+    grid-area: tp;
 }
 
 .title-cell {
     display: none;
-}
-
-
-.list-data .cell8 {
-    position: absolute;
-    z-index: -2
 }
 
 .line {
@@ -516,9 +545,9 @@ body {
         font-size: larger;
     }
 
-    .list-data div:nth-child(9) {
+    /*.list-data div:nth-child(9) {
         display: flex;
-    }
+    }*/
 
     .cell0 {
         grid-area: fl;
