@@ -23,6 +23,14 @@ const listData = document.querySelector('.list-data');
 const inputs = document.querySelectorAll('.input');
 const contIn = document.querySelector('.container-inputs');
 
+const inputFilial = document.querySelectorAll('.input-filial');
+const inputAgenda = document.querySelectorAll('.input-agenda');
+const inputBox = document.querySelectorAll('.input-box');
+const inputControle = document.querySelectorAll('.input-controle');
+const inputMaterial = document.querySelectorAll('.input-material');
+const inputQtPallet = document.querySelectorAll('.input-pallets');
+
+
 
 let scr;
 let toPrint;
@@ -32,6 +40,13 @@ let contCargaDevovidaKey = 1
 const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
                     'Hora', 'Timer']
                     
+
+class GetInputs {
+    constructor(filial, agenda, box, controle, material, pallets) {
+        this.filial = filial;
+        this.agenda
+    }
+} 
 
 function contCargaDevovidas(cont) {
     set(ref(database, 'key-cargas-devolvidas/'), {
@@ -549,10 +564,11 @@ document.addEventListener('click', e => {
     const el = e.target;
     if (el.classList.contains('push') || el.classList.contains('push-request')) {
         listData.classList.add('true')
-        getData();
-        contCarga(contCargarKey);
 
-        contCargarKey++;
+        //getData();
+        //contCarga(contCargarKey);
+
+        //contCargarKey++;
     }
 
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
