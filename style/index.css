@@ -220,7 +220,7 @@ body {
     grid-template-areas: "fl ag dc co ma pa dt hr tp";
     justify-items: center;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
     color: var(--two-txt-colorr);
     border-bottom: 1px solid #00141d31;
     width: 100%;

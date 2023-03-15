@@ -23,13 +23,14 @@ const listData = document.querySelector('.list-data');
 const inputs = document.querySelectorAll('.input');
 const contIn = document.querySelector('.container-inputs');
 
-const inputFilial = document.querySelectorAll('.input-filial');
-const inputAgenda = document.querySelectorAll('.input-agenda');
-const inputBox = document.querySelectorAll('.input-box');
-const inputControle = document.querySelectorAll('.input-controle');
-const inputMaterial = document.querySelectorAll('.input-material');
-const inputQtPallet = document.querySelectorAll('.input-pallets');
+const inputFilial = document.querySelector('.input-filial').value;
+const inputAgenda = document.querySelector('.input-agenda').value;
+const inputBox = document.querySelector('.input-box').value;
+const inputControle = document.querySelector('.input-controle').value;
+const inputMaterial = document.querySelector('.input-material').value;
+const inputQtPallet = document.querySelector('.input-pallets').value;
 
+const cargasObjects = [];
 
 
 let scr;
@@ -41,11 +42,19 @@ const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
                     'Hora', 'Timer']
                     
 
-class GetInputs {
+class CreateCargaObject {
     constructor(filial, agenda, box, controle, material, pallets) {
         this.filial = filial;
-        this.agenda
+        this.agenda = agenda;
+        this.box = box;
+        this.controle = controle;
+        this.material = material;
+        this.pallets = pallets
     }
+
+    /*validateData() {
+      return  this.filial ? true : false; 
+    }*/
 } 
 
 function contCargaDevovidas(cont) {
@@ -564,7 +573,9 @@ document.addEventListener('click', e => {
     const el = e.target;
     if (el.classList.contains('push') || el.classList.contains('push-request')) {
         listData.classList.add('true')
-
+        const carga = new CreateCargaObject(inputFilial, inputAgenda, inputBox, 
+                                            inputControle, inputMaterial, inputQtPallet);
+        console.log(carga)
         //getData();
         //contCarga(contCargarKey);
 
