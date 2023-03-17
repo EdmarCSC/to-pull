@@ -21,17 +21,17 @@ const contMain = document.querySelector('.container-main');
 const bodyMain = document.querySelector('.main-body');
 const listData = document.querySelector('.list-data');
 const inputs = document.querySelectorAll('.input');
-const contIn = document.querySelector('.container-inputs');
+const contIn = document.querySelector('.container-inputFilial')
 
-const inputFilial = document.querySelector('.input-filial').value;
-const inputAgenda = document.querySelector('.input-agenda').value;
-const inputBox = document.querySelector('.input-box').value;
-const inputControle = document.querySelector('.input-controle').value;
-const inputMaterial = document.querySelector('.input-material').value;
-const inputQtPallet = document.querySelector('.input-pallets').value;
+const inputFilial = document.querySelector('.input-filial');
+const inputAgenda = document.querySelector('.input-agenda');
+const inputBox = document.querySelector('.input-box');
+const inputControle = document.querySelector('.input-controle');
+const inputMaterial = document.querySelector('.input-material');
+const inputQtPallet = document.querySelector('.input-pallets');
 
 const cargasObjects = [];
-
+let dateNow; 
 
 let scr;
 let toPrint;
@@ -40,7 +40,41 @@ let contCargaDevovidaKey = 1
 
 const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
                     'Hora', 'Timer']
+  
                     
+function validateDataInputs() {
+    if (!inputFilial.value) {
+        inputFilial.focus();
+        return
+    }
+
+    if (!inputAgenda.value) {
+        inputAgenda.focus();
+        return
+    } 
+
+    if (!inputBox.value) {
+        inputBox.focus();
+        return
+    }
+
+    if (!inputControle.value) {
+        inputControle.focus();
+        return
+    }
+
+    if (!inputMaterial.value) {
+        inputMaterial.focus();
+        return
+    }
+
+    if (!inputQtPallet.value) {
+        inputQtPallet.focus();
+        return
+    }
+
+    return true
+}
 
 class CreateCargaObject {
     constructor(filial, agenda, box, controle, material, pallets) {
@@ -51,10 +85,6 @@ class CreateCargaObject {
         this.material = material;
         this.pallets = pallets
     }
-
-    /*validateData() {
-      return  this.filial ? true : false; 
-    }*/
 } 
 
 function contCargaDevovidas(cont) {
@@ -78,22 +108,22 @@ function cargaDevolvida(element) {
 }
 
 function contCarga(cont) {
-    set(ref(database, 'key-cargas-liberadas/'), {
+    set(ref(database, 'key-cargas-tst/'), {
        cont: cont
     });
 
 }
 
-function setCarga(carga, contador) {
-    set(ref(database, 'cargas-liberadas/' + contador), {
+function setCarga(carga, date, hour) {
+    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${contCargarKey}`), {
         afilial: carga.filial,
         agenda: carga.agenda,
         box: carga.box,
         controle: carga.controle,
         dmaterial: carga.material,
-        dtPallets: carga.qtPallets,
-        edata: carga.data, 
-        hora: carga.hora,
+        dtPallets: carga.pallets,
+        edata: date, 
+        hora: hour,
         kay: contCargarKey
     });
 }
@@ -160,7 +190,7 @@ function ajustDataHora(hora, data) {
     const mn = addZero(hour.getMinutes() - +m);
     const sc = addZero(hour.getSeconds() - +s);
     
-    const tempoAjustado = (`${ano}${mes}${dia}${hr}${mn}${sc}`).replace(/\-/g, '')
+    const tempoAjustado = (`${ano}${mes}${dia}${hr}${mn}${sc}`).replace(/\-/g, '');
     return tempoAjustado
 }
 
@@ -376,18 +406,18 @@ function printCargaOfScreen(valueInputs) {
     
     const timer = new CreateTimerNow()
     timer.startDateNow(celltimer, 0, t);
-    
+
     line.appendChild(celltimer); 
 
     listData.appendChild(line);
     
-    clearInputs();
-    inputs[0].focus();
+    clearValueInputs();
+    inputFilial.focus();
 }
 
 function getData() {
     const data = [];
-    inputs.forEach(e => {
+    inputFilialrEach(e => {
         data.push(e.value);
     });
 
@@ -401,10 +431,11 @@ function getData() {
     return data
 }
 
-function removeCargaRetiradas(key) {
+function removeCargaRetiradaconst (key) {
     remove(ref(database, 'cargas-retiradas/' + key), {
     })
 }
+
 
 function marcarItemLista(data) {
     const el = data
@@ -424,9 +455,9 @@ function marcarItemLista(data) {
     })
 }
 
-function clearInputs() {
+function clearValueInputs() {
     inputs.forEach(element => {
-    element.value = ''; 
+        element.value = ''; 
     });
 }
 
@@ -569,17 +600,36 @@ const reference = ref(database, 'cargas-retiradas/');
         marcarItemLista(lestData[indexData]);
     })
 
+const cargeTst = ref(database, `cargas-tst/`);
+    onValue(cargeTst, (snapshot) => {
+        const cargas = snapshot.val();
+    })
+
+
 document.addEventListener('click', e => {
     const el = e.target;
     if (el.classList.contains('push') || el.classList.contains('push-request')) {
-        listData.classList.add('true')
-        const carga = new CreateCargaObject(inputFilial, inputAgenda, inputBox, 
-                                            inputControle, inputMaterial, inputQtPallet);
-        console.log(carga)
-        //getData();
-        //contCarga(contCargarKey);
+        const listItems = 'true';
+        listData.classList.add(listItems)
+        
+        const valueInput = validateDataInputs();
+        if (!valueInput) return
 
-        //contCargarKey++;
+        const carga = new CreateCargaObject(inputFilial.value, inputAgenda.value, inputBox.value, 
+            inputControle.value, inputMaterial.value, inputQtPallet.value);
+
+        const date = getDate();
+        const hour = getHour();
+        setCarga(carga, date, hour);
+
+        clearValueInputs();
+        inputFilial.focus();
+
+
+        //getData();
+        contCarga(contCargarKey);
+
+        contCargarKey++;
     }
 
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
@@ -658,10 +708,16 @@ document.addEventListener('click', e => {
 });
 
 window.addEventListener('load', e => {
-    inputs[0].focus();
+    clearValueInputs();
+    inputFilial.focus();
     scr = window.screen.width;
+    dateNow = getDate();
+        
+        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`)).then((snapshot) => {
+            console.log(snapshot.val())    
+        })
 
-    get(ref(database, 'key-cargas-liberadas/')).then((snapshot) => {
+    get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
           const v = Object.values(snapshot.val())
           const cont =  Object.values(v)
