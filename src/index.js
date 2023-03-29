@@ -39,9 +39,73 @@ let contCargarKey = 1;
 let contCargaDevovidaKey = 1
 
 const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
-                    'Hora', 'Timer']
-  
-                    
+'Hora', 'Timer']
+
+class CreateObjectCargo {
+    constructor(carga) {
+        this.filial = carga.filial;
+        this.agenda = carga.agenda;
+        this.box = carga.box;
+        this.controle = carga.controle;
+        this.material = carga.material;
+        this.qtPallet = carga.qtPallets;
+        this.data = carga.data;
+        this.hora = carga.hora;
+    }
+
+    printObject() {
+        const div = 'div';
+        const clsLine = 'line';
+        const clsCell = 'cell';
+        
+        const lineObject = createComponent(div, clsLine);
+
+        const cellFilial = createComponent(div, clsCell);
+        const cellAgenda = createComponent(div, clsCell);
+        const cellBox = createComponent(div, clsCell);
+        const cellControle = createComponent(div, clsCell);
+        const cellMaterial = createComponent(div, clsCell);
+        const cellQtPallet = createComponent(div, clsCell);
+        const cellData = createComponent(div, clsCell);
+        const cellHora = createComponent(div, clsCell);
+
+        cellFilial.innerHTML = this.filial;
+        cellAgenda.innerHTML = this.agenda;
+        cellBox.innerHTML = this.box;
+        cellControle.innerHTML = this.controle;
+        cellMaterial.innerHTML = this.material;
+        cellQtPallet.innerHTML = this.qtPallet;
+        cellHora.innerHTML = this.hora;
+        cellData.innerHTML = this.data; 
+
+        lineObject.appendChild(cellFilial);
+        lineObject.appendChild(cellAgenda)
+        lineObject.appendChild(cellBox);
+        lineObject.appendChild(cellControle);
+        lineObject.appendChild(cellMaterial);
+        lineObject.appendChild(cellQtPallet);
+        lineObject.appendChild(cellHora);
+        lineObject.appendChild(cellData);
+
+        listData.appendChild(lineObject);
+    }
+}
+
+
+function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
+    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${contCargarKey}`), {
+        filial: filial,
+        agenda: agenda,
+        box: box,
+        controle: controle,
+        material: material,
+        qtPallets: qtPallets,
+        date: date, 
+        hora: hour,
+        kay: contCargarKey
+    });
+}
+
 function validateDataInputs() {
     if (!inputFilial.value) {
         inputFilial.focus();
@@ -72,20 +136,10 @@ function validateDataInputs() {
         inputQtPallet.focus();
         return
     }
-
+    
     return true
 }
 
-class CreateCargaObject {
-    constructor(filial, agenda, box, controle, material, pallets) {
-        this.filial = filial;
-        this.agenda = agenda;
-        this.box = box;
-        this.controle = controle;
-        this.material = material;
-        this.pallets = pallets
-    }
-} 
 
 function contCargaDevovidas(cont) {
     set(ref(database, 'key-cargas-devolvidas/'), {
@@ -112,20 +166,6 @@ function contCarga(cont) {
        cont: cont
     });
 
-}
-
-function setCarga(carga, date, hour) {
-    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${contCargarKey}`), {
-        afilial: carga.filial,
-        agenda: carga.agenda,
-        box: carga.box,
-        controle: carga.controle,
-        dmaterial: carga.material,
-        dtPallets: carga.pallets,
-        edata: date, 
-        hora: hour,
-        kay: contCargarKey
-    });
 }
 
 function removeCargaLiberadas(dataObiject) {
@@ -436,7 +476,6 @@ function removeCargaRetiradaconst (key) {
     })
 }
 
-
 function marcarItemLista(data) {
     const el = data
     const val = Object.values(el)
@@ -600,9 +639,19 @@ const reference = ref(database, 'cargas-retiradas/');
         marcarItemLista(lestData[indexData]);
     })
 
-const cargeTst = ref(database, `cargas-tst/`);
+const cargeTst = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`);
     onValue(cargeTst, (snapshot) => {
-        const cargas = snapshot.val();
+        const cargas = Object.values(snapshot.val())
+    
+        cargas.forEach(e => {
+            let elemento = Object.values(e);
+            elemento.forEach(el => {
+                const printCarga = new CreateObjectCargo(el);
+                printCarga.printObject();
+            
+                cargasObjects.push(el);
+            })  
+        })
     })
 
 
@@ -612,23 +661,19 @@ document.addEventListener('click', e => {
         const listItems = 'true';
         listData.classList.add(listItems)
         
-        const valueInput = validateDataInputs();
-        if (!valueInput) return
-
-        const carga = new CreateCargaObject(inputFilial.value, inputAgenda.value, inputBox.value, 
-            inputControle.value, inputMaterial.value, inputQtPallet.value);
-
         const date = getDate();
         const hour = getHour();
-        setCarga(carga, date, hour);
+        const valueInput = validateDataInputs();
+        
+        if (!valueInput) return
+
+        setCarga(inputFilial.value, inputAgenda.value, inputBox.value, 
+            inputControle.value, inputMaterial.value, inputQtPallet.value, date, hour);
 
         clearValueInputs();
         inputFilial.focus();
 
-
-        //getData();
         contCarga(contCargarKey);
-
         contCargarKey++;
     }
 
@@ -712,11 +757,21 @@ window.addEventListener('load', e => {
     inputFilial.focus();
     scr = window.screen.width;
     dateNow = getDate();
-        
-        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`)).then((snapshot) => {
-            console.log(snapshot.val())    
+    
+    get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`)).then((snapshot) => {
+        const cargas = Object.values(snapshot.val())
+    
+        cargas.forEach(e => {
+            let elemento = Object.values(e);
+            elemento.forEach(el => {
+                const printCarga = new CreateObjectCargo(el);
+                printCarga.printObject();
+            
+                cargasObjects.push(el);
+            })  
         })
-
+    })
+    
     get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
           const v = Object.values(snapshot.val())
@@ -743,22 +798,6 @@ window.addEventListener('load', e => {
         }
         return
     })
-
-    get(ref(database, 'cargas-liberadas/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          v.forEach(e => {
-            const data = e.edata
-            const tempo = e.hora
-            const tempoAjustado = ajustDataHora(tempo, data);
-            printCargasOfScreen(Object.values(e), tempoAjustado);            
-          })
-        } else {
-          console.log("No data available");
-        }
-      }).catch((error) => {
-        console.error(error);
-    });
 })
 
 window.addEventListener('beforeprint', () => {
