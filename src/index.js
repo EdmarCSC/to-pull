@@ -49,7 +49,7 @@ class CreateObjectCargo {
         this.controle = carga.controle;
         this.material = carga.material;
         this.qtPallet = carga.qtPallets;
-        this.data = carga.data;
+        this.date = carga.date;
         this.hora = carga.hora;
     }
 
@@ -57,6 +57,9 @@ class CreateObjectCargo {
         const div = 'div';
         const clsLine = 'line';
         const clsCell = 'cell';
+        const clsTime = 'time';
+        const startingTime = '00:00:00';
+        
         
         const lineObject = createComponent(div, clsLine);
 
@@ -66,8 +69,9 @@ class CreateObjectCargo {
         const cellControle = createComponent(div, clsCell);
         const cellMaterial = createComponent(div, clsCell);
         const cellQtPallet = createComponent(div, clsCell);
-        const cellData = createComponent(div, clsCell);
+        const cellDate = createComponent(div, clsCell);
         const cellHora = createComponent(div, clsCell);
+        const cellTime = createComponent(div, clsCell, clsTime)
 
         cellFilial.innerHTML = this.filial;
         cellAgenda.innerHTML = this.agenda;
@@ -75,8 +79,9 @@ class CreateObjectCargo {
         cellControle.innerHTML = this.controle;
         cellMaterial.innerHTML = this.material;
         cellQtPallet.innerHTML = this.qtPallet;
+        cellDate.innerHTML = this.date; 
         cellHora.innerHTML = this.hora;
-        cellData.innerHTML = this.data; 
+        cellTime.innerHTML = startingTime;
 
         lineObject.appendChild(cellFilial);
         lineObject.appendChild(cellAgenda)
@@ -84,12 +89,17 @@ class CreateObjectCargo {
         lineObject.appendChild(cellControle);
         lineObject.appendChild(cellMaterial);
         lineObject.appendChild(cellQtPallet);
+        lineObject.appendChild(cellDate);
         lineObject.appendChild(cellHora);
-        lineObject.appendChild(cellData);
+        lineObject.appendChild(cellTime);
+
 
         listData.appendChild(lineObject);
+
+        return cellTime;
     }
-}
+
+} 
 
 
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
@@ -266,32 +276,35 @@ class CreateTimer {
 }
 
 class CreateTimerNow {
-    constructor () {
+    constructor (cellTime, second, time) {
+        this.cellTime = cellTime,
+        this.second = second,
+        this.time = time
     }
 
-    createDateNow(segundos) {
-        const hour = new Date(segundos * 1000);     
+    createDateNow() {
+        const hour = new Date(this.second * 1000);     
         return hour.toLocaleTimeString ('pt-BR', { 
             hora12 : false, 
             timeZone: 'UTC'
             });
       } 
       
-    startDateNow(cellTempo, segundos, t) {
-        t = setInterval(() => {
-            segundos++;
-            let cronometro = this.createDateNow(segundos);
-            if (cronometro >= '00:20:00' &&  cronometro <= '00:40:00') {
-                addColorYellow(cellTempo);
+    startDateNow() {
+        this.time = setInterval(() => {
+            this.second++;
+            let cronometro = this.createDateNow();
+           if (cronometro >= '00:20:00' &&  cronometro <= '00:40:00') {
+                addColorYellow(this.cellTime);
             }
             
-    
             if (cronometro > '00:40:00') {
-                addColorRed(cellTempo);
+                addColorRed(this.cellTime);
             }
-            return cellTempo.innerHTML = cronometro;
+
+            return this.cellTime.innerHTML = cronometro;
         }, 1000);
-      }
+    }
 }
 
 class Carga {
@@ -354,56 +367,6 @@ function addColorRed(e) {
     return p.classList.add('red');
 }
 
-function printCargasOfScreen(data = 0, dateHour = '65464655464564655456') {
-    const date = dateHour.slice(0, 4);
-    const mes = dateHour.slice(4, 6);
-    const dia = dateHour.slice(6, 8);
-    const hora = dateHour.slice(8, 10);
-    const minutos = dateHour.slice(10, 12)
-    const segundos = dateHour.slice(12, 14)
-
-    let t;
-    let contCell = 0;
-    let contLine = 0;
-
-    const line = createComponent('div', 'line', `line${contLine}`);
-    contLine++;
-
-    if (scr <= 700) {
-        const titles = titleItemsList()
-        line.appendChild(titles);    
-    }
-    
-    data.forEach(e => {
-        const cell = createComponent('div', `cell${contCell}`, 'cell');
-        cell.innerHTML = e;
-    
-        contCell++;  
-
-        line.appendChild(cell); 
-    })
-
-    const cellTempo = createComponent('div', `cell${contCell++}`, 'cell')
-    cellTempo.innerHTML = '00:00:00';
-   
-   
-    const tempo = new CreateTimer();
-    tempo.start(cellTempo, date, mes, dia, 
-        hora, minutos, segundos, t);
-
-    line.appendChild(cellTempo);
-
-    get(ref(database, 'cargas-retiradas/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const cargasExcliur = Object.values(snapshot.val())
-          cargasExcliur.forEach(e => {
-            marcarItemLista(e)
-          })      
-        }
-    })
-
-    listData.appendChild(line);
-}
 
 function titleItemsList() {
     const titles = ['Filial', 'Agenda', 'Doca', 'Controle', 'Material', 'Pallets', 'Data', 'Hora', 'Tempo']
@@ -639,34 +602,38 @@ const reference = ref(database, 'cargas-retiradas/');
         marcarItemLista(lestData[indexData]);
     })
 
-const cargeTst = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`);
+function listenerCargas() {
+    const cargeTst = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`);
     onValue(cargeTst, (snapshot) => {
-        const cargas = Object.values(snapshot.val())
+        const cargas = Object.values(snapshot.val());
+        const lestCarga = cargas.length -1;
+        const printCarga = new CreateObjectCargo(cargas[lestCarga]);
+        const cellTime = printCarga.printObject();   
+        
+        const timer = new CreateTimerNow(cellTime, 0, '');
+        timer.startDateNow();
     
-        cargas.forEach(e => {
-            let elemento = Object.values(e);
-            elemento.forEach(el => {
-                const printCarga = new CreateObjectCargo(el);
-                printCarga.printObject();
-            
-                cargasObjects.push(el);
-            })  
-        })
+        cargasObjects.push(cargas[lestCarga]);
     })
+}
 
 
 document.addEventListener('click', e => {
     const el = e.target;
     if (el.classList.contains('push') || el.classList.contains('push-request')) {
+        
+        // Avalia se todos os inputs foram preechidos.
+        const valueInput = validateDataInputs();
+        if (!valueInput) return
+
+        //Adiciona uma class "true" para identifcar se a lista tem elementos.
         const listItems = 'true';
         listData.classList.add(listItems)
         
+        // Coleta os dados para a criação do Object carga.
         const date = getDate();
         const hour = getHour();
-        const valueInput = validateDataInputs();
         
-        if (!valueInput) return
-
         setCarga(inputFilial.value, inputAgenda.value, inputBox.value, 
             inputControle.value, inputMaterial.value, inputQtPallet.value, date, hour);
 
@@ -675,6 +642,8 @@ document.addEventListener('click', e => {
 
         contCarga(contCargarKey);
         contCargarKey++;
+
+        listenerCargas();
     }
 
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
@@ -758,19 +727,15 @@ window.addEventListener('load', e => {
     scr = window.screen.width;
     dateNow = getDate();
     
-    get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}`)).then((snapshot) => {
+    /*get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
         const cargas = Object.values(snapshot.val())
-    
         cargas.forEach(e => {
-            let elemento = Object.values(e);
-            elemento.forEach(el => {
-                const printCarga = new CreateObjectCargo(el);
-                printCarga.printObject();
-            
-                cargasObjects.push(el);
-            })  
+            const printCarga = new CreateObjectCargo(e);
+            printCarga.printObject();
+        
+            cargasObjects.push(e);
         })
-    })
+    })*/
     
     get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
