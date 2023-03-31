@@ -101,7 +101,6 @@ class CreateObjectCargo {
 
 } 
 
-
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
     set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${contCargarKey}`), {
         filial: filial,
@@ -149,7 +148,6 @@ function validateDataInputs() {
     
     return true
 }
-
 
 function contCargaDevovidas(cont) {
     set(ref(database, 'key-cargas-devolvidas/'), {
@@ -244,33 +242,40 @@ function ajustDataHora(hora, data) {
     return tempoAjustado
 }
 
+// Classe responsavel por gerar o tempo com base no tempo anterior caso a, pagina feche ou em uma tualização. 
+// assim o tempo sempre vai continuar de onde parou.
 class CreateTimer {
-  constructor( ) {   
+  constructor(cellTime, time, cont) {
+    this.cellTime = cellTime,
+    this.date = time.slice(0, 4),
+    this.mes = time.slice(4, 6),
+    this.dia = time.slice(6, 8),
+    this.hora = time.slice(8, 10),
+    this.minutos = time.slice(10, 12),
+    this.segundos = time.slice(12, 14),
+    this.cont = cont   
   }
   
-  create(date, mes, dia, 
-    hora, minutos, segundos) {
-    const hour = new Date(date, mes, dia, hora, minutos, segundos);     
+  create() {
+    const hour = new Date(this.date, this.mes, this.dia, this.hora, this.minutos, this.segundos);     
     return hour.toLocaleTimeString ('pt-BR');
   } 
   
-  start(cellTempo, date, mes, dia, 
-    hora, minutos, segundos, t) {
-    t = setInterval(() => {
-        segundos++;
-        let cronometro = this.create(date, mes, dia, 
-                                    hora, minutos, segundos);
+  start() {
+    this.cont = setInterval(() => {
+        this.segundos++;
+        let cronometro = this.create();
 
         if (cronometro >= '00:20:00' &&  cronometro <= '00:40:00') {
-            addColorYellow(cellTempo);
+            addColorYellow(this.cellTime);
         }
         
 
         if (cronometro > '00:40:00') {
-            addColorRed(cellTempo);
+            addColorRed(this.cellTime);
         }
 
-        return cellTempo.innerHTML = cronometro;
+        return this.cellTime.innerHTML = cronometro;
     }, 1000);
   }
 }
@@ -602,24 +607,10 @@ const reference = ref(database, 'cargas-retiradas/');
         marcarItemLista(lestData[indexData]);
     })
 
-function listenerCargas() {
-    const cargeTst = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`);
-    onValue(cargeTst, (snapshot) => {
-        const cargas = Object.values(snapshot.val());
-        const lestCarga = cargas.length -1;
-        const printCarga = new CreateObjectCargo(cargas[lestCarga]);
-        const cellTime = printCarga.printObject();   
-        
-        const timer = new CreateTimerNow(cellTime, 0, '');
-        timer.startDateNow();
-    
-        cargasObjects.push(cargas[lestCarga]);
-    })
-}
-
-
 document.addEventListener('click', e => {
     const el = e.target;
+
+    // Se o click for no botão de enviar.
     if (el.classList.contains('push') || el.classList.contains('push-request')) {
         
         // Avalia se todos os inputs foram preechidos.
@@ -631,19 +622,43 @@ document.addEventListener('click', e => {
         listData.classList.add(listItems)
         
         // Coleta os dados para a criação do Object carga.
-        const date = getDate();
-        const hour = getHour();
+        const date = getDate(); // Coleta a data atual.
+        const hour = getHour(); // Celeta a hora atual.
         
         setCarga(inputFilial.value, inputAgenda.value, inputBox.value, 
-            inputControle.value, inputMaterial.value, inputQtPallet.value, date, hour);
-
+            inputControle.value, inputMaterial.value, inputQtPallet.value, date, hour); // Coleta os dados dos inputs.
+        
+        // Faz limpeza dos inputs após todos os dados serem capiturados.
         clearValueInputs();
         inputFilial.focus();
-
+        
+        // Guarda o valor da (id) da carga
         contCarga(contCargarKey);
+        // Incrementa o valor, para que a carga seja sempre a ultima.
         contCargarKey++;
 
-        listenerCargas();
+        // Faz o get no DB
+        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        const cargas = Object.values(snapshot.val())
+
+            // Coleta o index da ultima carga. 
+            const lestCarga = cargas.length -1;
+
+            // Add no object (global) array a ultima carga, da lista de carga vinda do server.
+            cargasObjects.push(cargas[lestCarga]);
+            
+            // Coleta o index da ultima carga do object array. 
+            const carga = cargasObjects.length -1;
+
+            // Cria um novo object com os valores da ultima carga contida no object array (global).
+            const printCarga = new CreateObjectCargo(cargasObjects[carga]);
+            // Imprime os dados na tela e capitura a ultima celula para inserir o time.
+            const cellTime = printCarga.printObject();   
+            
+            // Add o time na celula correspondente.
+            const timer = new CreateTimerNow(cellTime, 0, '');
+            timer.startDateNow();
+        });
     }
 
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
@@ -727,15 +742,24 @@ window.addEventListener('load', e => {
     scr = window.screen.width;
     dateNow = getDate();
     
-    /*get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+    get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
         const cargas = Object.values(snapshot.val())
         cargas.forEach(e => {
+            const date = e.date;
+            const hour = e.hora;
+            const cont = '';
+
+            const time = ajustDataHora(hour, date);
+
             const printCarga = new CreateObjectCargo(e);
-            printCarga.printObject();
+            const cellTime = printCarga.printObject();
+
+            const newTime = new CreateTimer(cellTime, time, cont);
+            newTime.start()
         
             cargasObjects.push(e);
         })
-    })*/
+    })
     
     get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
