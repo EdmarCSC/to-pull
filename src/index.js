@@ -21,7 +21,9 @@ const contMain = document.querySelector('.container-main');
 const bodyMain = document.querySelector('.main-body');
 const listData = document.querySelector('.list-data');
 const inputs = document.querySelectorAll('.input');
-const contIn = document.querySelector('.container-inputFilial')
+const contIn = document.querySelector('.container-inputs');
+const totalCargaPuxar = document.querySelector('.numbers-cargas-puxar')
+const totalCargaPuxadas = document.querySelector('.numbers-cargas-puxadas')
 
 const inputFilial = document.querySelector('.input-filial');
 const inputAgenda = document.querySelector('.input-agenda');
@@ -30,17 +32,21 @@ const inputControle = document.querySelector('.input-controle');
 const inputMaterial = document.querySelector('.input-material');
 const inputQtPallet = document.querySelector('.input-pallets');
 
-const cargasObjects = [];
+const cargasPuxar = [];
+const cargasPuxadas = [];
 let dateNow; 
 
 let scr;
 let toPrint;
-let contCargarKey = 1;
+let componentOfRemove; 
+
+let idCarga = 1;
 let contCargaDevovidaKey = 1
 
 const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
 'Hora', 'Timer']
 
+// class que constroi objeto carga. 
 class CreateObjectCargo {
     constructor(carga) {
         this.filial = carga.filial;
@@ -51,27 +57,43 @@ class CreateObjectCargo {
         this.qtPallet = carga.qtPallets;
         this.date = carga.date;
         this.hora = carga.hora;
+        this.id = carga.id
     }
 
+    // Metodo que printa a carga na tela.
     printObject() {
         const div = 'div';
         const clsLine = 'line';
         const clsCell = 'cell';
+        const clsFilial = 'filial';
+        const clsAgenda = 'agenda';
+        const clsBox = 'box';
+        const clsControle = 'controle';
+        const clsMaterial = 'material';
+        const clsPallets = 'qt-pallets';
+        const clsData = 'data';
+        const clsHora = 'hora';
         const clsTime = 'time';
+        const clsIdCarga = 'id'
         const startingTime = '00:00:00';
         
-        
         const lineObject = createComponent(div, clsLine);
+        
+        if (scr <= 700) {
+            const titles = titleItemsList()
+            lineObject.appendChild(titles);    
+        }
 
-        const cellFilial = createComponent(div, clsCell);
-        const cellAgenda = createComponent(div, clsCell);
-        const cellBox = createComponent(div, clsCell);
-        const cellControle = createComponent(div, clsCell);
-        const cellMaterial = createComponent(div, clsCell);
-        const cellQtPallet = createComponent(div, clsCell);
-        const cellDate = createComponent(div, clsCell);
-        const cellHora = createComponent(div, clsCell);
+        const cellFilial = createComponent(div, clsCell, clsFilial);
+        const cellAgenda = createComponent(div, clsCell, clsAgenda);
+        const cellBox = createComponent(div, clsCell, clsBox);
+        const cellControle = createComponent(div, clsCell, clsControle);
+        const cellMaterial = createComponent(div, clsCell, clsMaterial);
+        const cellQtPallet = createComponent(div, clsCell, clsPallets);
+        const cellDate = createComponent(div, clsCell, clsData);
+        const cellHora = createComponent(div, clsCell, clsHora);
         const cellTime = createComponent(div, clsCell, clsTime)
+        const cellId = createComponent(div, clsCell, clsIdCarga)
 
         cellFilial.innerHTML = this.filial;
         cellAgenda.innerHTML = this.agenda;
@@ -82,6 +104,7 @@ class CreateObjectCargo {
         cellDate.innerHTML = this.date; 
         cellHora.innerHTML = this.hora;
         cellTime.innerHTML = startingTime;
+        cellId.innerHTML = this.id;
 
         lineObject.appendChild(cellFilial);
         lineObject.appendChild(cellAgenda)
@@ -92,17 +115,28 @@ class CreateObjectCargo {
         lineObject.appendChild(cellDate);
         lineObject.appendChild(cellHora);
         lineObject.appendChild(cellTime);
-
+        lineObject.appendChild(cellId);
 
         listData.appendChild(lineObject);
 
         return cellTime;
     }
-
 } 
 
+function calcCargasPuxadas() {
+    const numbersOfCargas = cargasPuxadas.length;
+
+    return numbersOfCargas;
+}
+
+function calcCargasPuxar() {
+    const numbersOfCargas = cargasPuxar.length;
+
+    return numbersOfCargas;
+}
+
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
-    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${contCargarKey}`), {
+    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
         filial: filial,
         agenda: agenda,
         box: box,
@@ -111,7 +145,22 @@ function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour
         qtPallets: qtPallets,
         date: date, 
         hora: hour,
-        kay: contCargarKey
+        id: idCarga
+    });
+}
+
+function setHistoricoCarga(carga, valueTime) {
+    set(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${carga.id}`), {
+        filial: carga.filial,
+        agenda: carga.agenda,
+        box: carga.box,
+        controle: carga.controle,
+        material: carga.material,
+        qtPallets: carga.qtPallets,
+        date: carga.date, 
+        hora: carga.hora,
+        tempo: valueTime,
+        id: carga.id
     });
 }
 
@@ -173,24 +222,29 @@ function contCarga(cont) {
     set(ref(database, 'key-cargas-tst/'), {
        cont: cont
     });
-
 }
 
-function removeCargaLiberadas(dataObiject) {
-    remove(ref(database, 'cargas-liberadas/' + dataObiject[8]), {
+function removeCargaLiberadas(id) {
+    remove(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${id}`), {
     })
 }
 
-function getDataCells() {
-    const dataCells = remover.childNodes;
+function getDataCells(cls) {
+    const dataCells = componentOfRemove.childNodes;
     const valuesCells = []
+    let id, time 
 
     dataCells.forEach(e => {
         if (e.classList.contains('cell')) {
             valuesCells.push(e.textContent);
+            if (e.classList.contains(cls)) id = e.textContent;       
+            if (e.classList.contains(cls)) time = e.textContent;       
         }
     })
     
+    if (id) return id
+    if (time) return time
+
     return valuesCells
 }
 
@@ -333,8 +387,6 @@ function createComponent(el, cls, id) {
     return component;
 }
 
-let remover; 
-
 function removeComponent(cancel) {
  const dlg = document.querySelector('.dialog-box');
     const dlgMobal = document.querySelector('.mobile-dialog-box');
@@ -348,7 +400,7 @@ function removeComponent(cancel) {
     if (dlg != null) dlg.remove()
     if (dlgMobal != null) dlgMobal.remove()
 
-    remover.remove();
+    componentOfRemove.remove();
 
     dlg.remove();
 }
@@ -372,13 +424,17 @@ function addColorRed(e) {
     return p.classList.add('red');
 }
 
-
 function titleItemsList() {
     const titles = ['Filial', 'Agenda', 'Doca', 'Controle', 'Material', 'Pallets', 'Data', 'Hora', 'Tempo']
-    const contTitile = createComponent('div', 'container-title-of-list');
-
+    
+    const div = 'div';
+    const p = 'p';
+    const titleOfList =  'container-title-of-list';
+    const titleOfElement = 'title';
+    
+    const contTitile = createComponent(div, titleOfList);
     titles.forEach(e => {
-        const title = createComponent('p', 'title')
+        const title = createComponent(p, titleOfElement);
         title.innerHTML = e;
         contTitile.appendChild(title)    
     })
@@ -434,7 +490,7 @@ function getData() {
 
     const carga = new Carga(data[0], data[1], data[2], data[3], data[4],
                                  data[5], data[6], data[7], data[8]);    
-    setCarga(carga, contCargarKey);
+    setCarga(carga, idCarga);
 
     return data
 }
@@ -483,7 +539,7 @@ function getDataToPrint(req) {
 
         return valuesOfChilds
     } else {
-        const dataToPrint = remover.childNodes;
+        const dataToPrint = componentOfRemove.childNodes;
         
         dataToPrint.forEach(e => {
             if (e.classList.contains('cell')) valuesOfChilds.push(e.innerHTML)
@@ -520,7 +576,6 @@ function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
     bodyOfPrint.appendChild(timeRequest)
 
     bodyMain.appendChild(bodyOfPrint)
-
 }
 
 function mobileDialogBox() {
@@ -633,9 +688,9 @@ document.addEventListener('click', e => {
         inputFilial.focus();
         
         // Guarda o valor da (id) da carga
-        contCarga(contCargarKey);
+        contCarga(idCarga);
         // Incrementa o valor, para que a carga seja sempre a ultima.
-        contCargarKey++;
+        idCarga++;
 
         // Faz o get no DB
         get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
@@ -645,19 +700,24 @@ document.addEventListener('click', e => {
             const lestCarga = cargas.length -1;
 
             // Add no object (global) array a ultima carga, da lista de carga vinda do server.
-            cargasObjects.push(cargas[lestCarga]);
+            cargasPuxar.push(cargas[lestCarga]);
             
             // Coleta o index da ultima carga do object array. 
-            const carga = cargasObjects.length -1;
+            const carga = cargasPuxar.length -1;
 
             // Cria um novo object com os valores da ultima carga contida no object array (global).
-            const printCarga = new CreateObjectCargo(cargasObjects[carga]);
+            const printCarga = new CreateObjectCargo(cargasPuxar[carga]);
             // Imprime os dados na tela e capitura a ultima celula para inserir o time.
             const cellTime = printCarga.printObject();   
             
             // Add o time na celula correspondente.
             const timer = new CreateTimerNow(cellTime, 0, '');
             timer.startDateNow();
+
+            if (scr >= 700) {
+                totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+                totalCargaPuxar.innerHTML = calcCargasPuxar();
+            }
         });
     }
 
@@ -667,7 +727,6 @@ document.addEventListener('click', e => {
 
         menu.classList.toggle('animation-btn-menu');
         boxMenu.classList.toggle('animation-box-menu');
-
     }
 
     if (el.classList.contains('transpicking')){
@@ -691,24 +750,47 @@ document.addEventListener('click', e => {
     }
 
     if (el.classList.contains('cell')) {
-        remover = el.parentNode;
+        componentOfRemove = el.parentNode;
+        
+        //const clsId = 'id';
+        
         if (scr > 700) dialogBox();
+        
+        //const valueId = getDataCells(clsId);
+        
         if (scr <= 700) mobileDialogBox();
     }
 
     if (el.classList.contains('btn-confirm-dialog-box') || el.classList.contains('m-btn-confirm-dialog-box')) {
-        const dataObiject = getDataCells();
-        removeCargaLiberadas(dataObiject)
-
-        const key = getDataCells()
-        removeCargaRetiradas(key[8])
+        const clsId = 'id'
+        const clsTime = 'time'
         
-        if (scr > 700) removeComponent()
-        if (scr <= 700) removeComponent()
+        // Coleta o id para a exclusão da carga tanto na tela quanto no DB.
+        const valueId = getDataCells(clsId);
+        let historyOfCarga 
+        
+        // Faz a busca da cara especifca com o valor do ID obitido atravez de insyrução anterior.
+        cargasPuxar.forEach(carga => {
+            if (carga.id === Number(valueId)) {
+                historyOfCarga =  carga;   
+            } 
+        })
+        
+        // Envia o ID para que possa ser remivido a carga no DB.
+        removeCargaLiberadas(valueId);
+        
+        // Coleta o tempo em que a carga ficou esperando para ser puxada.
+        const valueTime = getDataCells(clsTime);
+        // Envia tanto a cerga quanto o tempo para ser armazenada em um historico.
+        setHistoricoCarga(historyOfCarga, valueTime);        
+        
+        // Remove da tela tanto a caixa de dialogo quanto a linha referente a carga.
+        if (scr > 700) removeComponent() // Desktop. 
+        if (scr <= 700) removeComponent() // Mobie.
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
-        if (!remover.classList.contains('green')) {
+        if (!componentOfRemove.classList.contains('green')) {
             removeComponent('true');
             return
         }
@@ -716,7 +798,7 @@ document.addEventListener('click', e => {
         const dataObiject = getDataCells();
         cargaDevolvida(dataObiject)
 
-        removeGreen(remover)
+        removeGreen(componentOfRemove)
         
         const key = getDataCells()
         removeCargaRetiradas(key[8])
@@ -757,15 +839,31 @@ window.addEventListener('load', e => {
             const newTime = new CreateTimer(cellTime, time, cont);
             newTime.start()
         
-            cargasObjects.push(e);
+            cargasPuxar.push(e);
         })
-    })
+    }).catch((error) => {
+        console.error(error)
+      });
+
+    get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        const cargas = Object.values(snapshot.val())
+        cargas.forEach(e => {
+            cargasPuxadas.push(e);
+        })
+
+        if (scr >= 700) {
+            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+            totalCargaPuxar.innerHTML = calcCargasPuxar();
+        }
+    }).catch((error) => {
+        console.error(error)
+      });
     
     get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
           const v = Object.values(snapshot.val())
           const cont =  Object.values(v)
-          contCargarKey += cont[0]; 
+          idCarga += cont[0]; 
         }
         return
     })
@@ -777,7 +875,9 @@ window.addEventListener('load', e => {
           contCargaDevovidaKey += cont[0]; 
         }
         return
-    })
+    }).catch((error) => {
+        console.error(error)
+      });
 
     get(ref(database, 'key-cargas-listadas-screen/')).then((snapshot) => {
         if (snapshot.exists()) {
@@ -786,7 +886,11 @@ window.addEventListener('load', e => {
           contCargarListadaKey += cont[0]; 
         }
         return
-    })
+    }).catch((error) => {
+        console.error(error)
+      });
+
+     
 })
 
 window.addEventListener('beforeprint', () => {
