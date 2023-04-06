@@ -84,18 +84,18 @@ class CreateObjectCargo {
             lineObject.appendChild(titles);    
         }
 
-        const cellFilial = createComponent(div, clsCell, clsFilial);
-        const cellAgenda = createComponent(div, clsCell, clsAgenda);
-        const cellBox = createComponent(div, clsCell, clsBox);
-        const cellControle = createComponent(div, clsCell, clsControle);
-        const cellMaterial = createComponent(div, clsCell, clsMaterial);
-        const cellQtPallet = createComponent(div, clsCell, clsPallets);
-        const cellDate = createComponent(div, clsCell, clsData);
-        const cellHora = createComponent(div, clsCell, clsHora);
-        const cellTime = createComponent(div, clsCell, clsTime)
-        const cellId = createComponent(div, clsCell, clsIdCarga)
+        const cellFilial = createComponent(div, clsCell, clsFilial, this.filial);
+        const cellAgenda = createComponent(div, clsCell, clsAgenda, this.agenda);
+        const cellBox = createComponent(div, clsCell, clsBox, this.box);
+        const cellControle = createComponent(div, clsCell, clsControle, this.controle);
+        const cellMaterial = createComponent(div, clsCell, clsMaterial, this.material);
+        const cellQtPallet = createComponent(div, clsCell, clsPallets, this.qtPallet);
+        const cellDate = createComponent(div, clsCell, clsData, this.date);
+        const cellHora = createComponent(div, clsCell, clsHora, this.hora);
+        const cellTime = createComponent(div, clsCell, clsTime, this.startingTime)
+        const cellId = createComponent(div, clsCell, clsIdCarga, this.id)
 
-        cellFilial.innerHTML = this.filial;
+        /*cellFilial.innerHTML = this.filial;
         cellAgenda.innerHTML = this.agenda;
         cellBox.innerHTML = this.box;
         cellControle.innerHTML = this.controle;
@@ -104,7 +104,7 @@ class CreateObjectCargo {
         cellDate.innerHTML = this.date; 
         cellHora.innerHTML = this.hora;
         cellTime.innerHTML = startingTime;
-        cellId.innerHTML = this.id;
+        cellId.innerHTML = this.id;*/
 
         lineObject.appendChild(cellFilial);
         lineObject.appendChild(cellAgenda)
@@ -379,11 +379,15 @@ class Carga {
     }
 }
 
-function createComponent(el, cls, id) {
+function createComponent(el, cls, id, value) {
+    const p = document.createElement('p');
+    p.innerHTML = value
+
     const component = document.createElement(el);
     component.classList.add(cls);
     component.classList.add(id);
 
+    if (value) component.appendChild(p);
     return component;
 }
 
@@ -787,6 +791,32 @@ document.addEventListener('click', e => {
         // Remove da tela tanto a caixa de dialogo quanto a linha referente a carga.
         if (scr > 700) removeComponent() // Desktop. 
         if (scr <= 700) removeComponent() // Mobie.
+
+        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+            const cargas = Object.values(snapshot.val())
+            const lestCarga = cargas.length -1;
+                
+            cargasPuxar.pop(cargas[lestCarga]);
+    
+            if (scr >= 700) {
+                totalCargaPuxar.innerHTML = calcCargasPuxar();
+            }
+        }).catch((error) => {
+            console.error(error)
+          });
+
+        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        const cargas = Object.values(snapshot.val())
+        const lestCarga = cargas.length -1;
+            
+        cargasPuxadas.push(cargas[lestCarga]);
+
+        if (scr >= 700) {
+            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+        }
+    }).catch((error) => {
+        console.error(error)
+      });
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
@@ -824,6 +854,37 @@ window.addEventListener('load', e => {
     scr = window.screen.width;
     dateNow = getDate();
     
+    get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
+        if (snapshot.exists()) {
+          const v = Object.values(snapshot.val())
+          const cont =  Object.values(v)
+          idCarga += cont[0]; 
+        }
+        return
+    })
+
+    get(ref(database, 'key-cargas-devolvidas/')).then((snapshot) => {
+        if (snapshot.exists()) {
+          const v = Object.values(snapshot.val())
+          const cont =  Object.values(v)
+          contCargaDevovidaKey += cont[0]; 
+        }
+        return
+    }).catch((error) => {
+        console.error(error)
+      });
+
+    get(ref(database, 'key-cargas-listadas-screen/')).then((snapshot) => {
+        if (snapshot.exists()) {
+          const v = Object.values(snapshot.val())
+          const cont =  Object.values(v)
+          contCargarListadaKey += cont[0]; 
+        }
+        return
+    }).catch((error) => {
+        console.error(error)
+      });
+
     get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
         const cargas = Object.values(snapshot.val())
         cargas.forEach(e => {
@@ -859,38 +920,22 @@ window.addEventListener('load', e => {
         console.error(error)
       });
     
-    get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          const cont =  Object.values(v)
-          idCarga += cont[0]; 
-        }
-        return
+      
+    /*const cPuxado = ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)
+    onValue(cPuxado, (snapshot) => {
+        const cargas = Object.values(snapshot.val())
+      
+
+        //if (scr >= 700) totalCargaPuxadas.innerHTML = calcCargasPuxadas();    
     })
 
-    get(ref(database, 'key-cargas-devolvidas/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          const cont =  Object.values(v)
-          contCargaDevovidaKey += cont[0]; 
-        }
-        return
-    }).catch((error) => {
-        console.error(error)
-      });
+    const cPuxar = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`);
+    onValue(cPuxar, (snapshot) => {
+        const cargas = Object.values(snapshot.val())
+        
 
-    get(ref(database, 'key-cargas-listadas-screen/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          const cont =  Object.values(v)
-          contCargarListadaKey += cont[0]; 
-        }
-        return
-    }).catch((error) => {
-        console.error(error)
-      });
-
-     
+       // if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar();
+    })*/
 })
 
 window.addEventListener('beforeprint', () => {

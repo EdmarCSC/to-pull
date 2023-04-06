@@ -146,10 +146,6 @@ body {
     box-shadow: 0 10px 10px  var(--second-bg-color);
 }
 
-.container-inputs input:focus {
-    border: none;
-}
-
 .container-inputs label {
     align-self: flex-start;
     margin-bottom: 3px;
@@ -285,47 +281,15 @@ body {
 .line div {
     display: flex;
     border-left: 1px solid var(--main-bg-opacity-color);
-    padding-left: 10px;
+    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-
 .cell {
     justify-content: center;
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-
-.cell0 {
-    grid-area: fl;
-}
-.cell1 {
-    grid-area: ag;
-}
-.cell2 {
-    grid-area: dc;
-}
-.cell3 {
-    grid-area: co;
-}
-
-.cell4 {
-    justify-content: flex-start;
-}
-
-.cell5 {
-    grid-area: pa;
-}
-.cell6 {
-    grid-area: dt;
-}
-.cell7 {
-    grid-area: hr;
-}
-
-.cell9 {
-    grid-area: tp;
-}
 
 .yellow {
     background-color: yellow;
@@ -337,6 +301,11 @@ body {
 
 .green {
     background-color: green;
+}
+
+.material {
+    justify-content: flex-start;
+    padding: 0 10px 0 3px;
 }
 
 .id {
