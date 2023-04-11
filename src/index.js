@@ -57,6 +57,7 @@ class CreateObjectCargo {
         this.qtPallet = carga.qtPallets;
         this.date = carga.date;
         this.hora = carga.hora;
+        this.startingTime = '00:00:00';
         this.id = carga.id
     }
 
@@ -75,7 +76,6 @@ class CreateObjectCargo {
         const clsHora = 'hora';
         const clsTime = 'time';
         const clsIdCarga = 'id'
-        const startingTime = '00:00:00';
         
         const lineObject = createComponent(div, clsLine);
         
@@ -288,9 +288,9 @@ function ajustDataHora(hora, data) {
     const s = hora.slice(6, 7)
 
     const hour = new Date();
-    const hr = addZero(hour.getHours() - +h);
-    const mn = addZero(hour.getMinutes() - +m);
-    const sc = addZero(hour.getSeconds() - +s);
+    const hr = addZero(+h - hour.getHours());
+    const mn = addZero(+m - hour.getMinutes());
+    const sc = addZero(+s - hour.getSeconds());
     
     const tempoAjustado = (`${ano}${mes}${dia}${hr}${mn}${sc}`).replace(/\-/g, '');
     return tempoAjustado
@@ -299,20 +299,25 @@ function ajustDataHora(hora, data) {
 // Classe responsavel por gerar o tempo com base no tempo anterior caso a, pagina feche ou em uma tualização. 
 // assim o tempo sempre vai continuar de onde parou.
 class CreateTimer {
-  constructor(cellTime, time, cont) {
+  constructor(cellTime, data, hora, cont) {
     this.cellTime = cellTime,
-    this.date = time.slice(0, 4),
-    this.mes = time.slice(4, 6),
-    this.dia = time.slice(6, 8),
-    this.hora = time.slice(8, 10),
-    this.minutos = time.slice(10, 12),
-    this.segundos = time.slice(12, 14),
-    this.cont = cont   
+    this.ano =  data.slice(6, 10),
+    this.mes = data.slice(3, 5),
+    this.dia = data.slice(0, 2);
+    this.hora = hora,
+    this.cont = cont
   }
   
   create() {
-    const hour = new Date(this.date, this.mes, this.dia, this.hora, this.minutos, this.segundos);     
-    return hour.toLocaleTimeString ('pt-BR');
+    const oldHour = new Date(`${this.ano}-${this.mes}-${this.dia}T${this.hora}`);     
+    const newHour =new Date();     
+    
+    const h = new Date(newHour - oldHour);     
+    let hour = addZero(h.getUTCHours())+':'
+    hour += addZero(h.getUTCMinutes())+':'
+    hour += addZero(h.getUTCSeconds())
+
+    return hour
   } 
   
   start() {
@@ -324,7 +329,6 @@ class CreateTimer {
             addColorYellow(this.cellTime);
         }
         
-
         if (cronometro > '00:40:00') {
             addColorRed(this.cellTime);
         }
@@ -639,32 +643,7 @@ function compareElementos(element) {
     if (cControle === controle && cAgenda === agenda) return true
     
     return false
-}                                                                                                                                                                                                                                                                                                                                                                                                                           
-
-const refCargaLiberadas = ref(database, 'cargas-liberadas/');
-    onValue(refCargaLiberadas, (snapshot) => {
-
-        if (!snapshot.exists() || !listData.classList.contains('true')) return
-        
-        const data = Object.values(snapshot.val());
-        const lestData = Object.values(data);
-        const indexData = data.length -1;
-
-        const validar = compareElementos(lestData[indexData])
-        if (validar) return
-
-        printCargaOfScreen(Object.values(lestData[indexData]));
-    })
-
-const reference = ref(database, 'cargas-retiradas/');
-    onValue(reference, (snapshot) => {
-        if (!snapshot.exists()) return
-        const data = Object.values(snapshot.val());
-        const lestData = Object.values(data);
-        const indexData = data.length -1;
-
-        marcarItemLista(lestData[indexData]);
-    })
+}
 
 document.addEventListener('click', e => {
     const el = e.target;
@@ -705,7 +684,7 @@ document.addEventListener('click', e => {
 
             // Add no object (global) array a ultima carga, da lista de carga vinda do server.
             cargasPuxar.push(cargas[lestCarga]);
-            
+
             // Coleta o index da ultima carga do object array. 
             const carga = cargasPuxar.length -1;
 
@@ -718,6 +697,7 @@ document.addEventListener('click', e => {
             const timer = new CreateTimerNow(cellTime, 0, '');
             timer.startDateNow();
 
+            // Verifica to tamanho da tela, caso seja atendida faz a impressão dos valores cargas a puxar e cargas puxadas.
             if (scr >= 700) {
                 totalCargaPuxadas.innerHTML = calcCargasPuxadas();
                 totalCargaPuxar.innerHTML = calcCargasPuxar();
@@ -849,11 +829,62 @@ document.addEventListener('click', e => {
 });
 
 window.addEventListener('load', e => {
+    // Função responsavel por limpar os inputs.
     clearValueInputs();
+    // Add o foco no input. 
     inputFilial.focus();
+    // Coleta o tamanho da tela.
     scr = window.screen.width;
+    // Coleta a data e hora atual.
     dateNow = getDate();
+
+    // Busca todas as cargas que foram liberadas que ainda não retiradas.
+   get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        // Se não houver carga encerra o processo.
+        if (!snapshot.exists()) return
+
+        // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
+        const cargas = Object.values(snapshot.val())
+        cargas.forEach(e => {
+            let cont = 0
+            // Objeto array global que armazena todas as cargas obtdas pelo metodo GET.
+            cargasPuxar.push(e);
+            // cria o objeto da carga.
+            const carga = new CreateObjectCargo(e);
+            // Coleta o retorne do objeto carga (Celula Time para passar para gerador do time). 
+            const cellTime =  carga.printObject();
+            // Gerador do time.
+            const tm = new CreateTimer(cellTime, e.date, e.hora, cont) 
+            tm.start();
+        })
+
+        // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas a serem puchadas.
+        if (scr >= 700) {
+            totalCargaPuxar.innerHTML = calcCargasPuxar();
+        }
+
+    }).catch((error) => {
+        console.error(error)
+    });
+
+    // Busca todas as cargas que foram liberadas que ja foram retiradas.
+    get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
     
+        // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
+        const cargas = Object.values(snapshot.val())
+        cargas.forEach(e => {
+            cargasPuxadas.push(e);
+        })
+
+        // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas que foram puchadas.
+        if (scr >= 700) {
+            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+        }
+    }).catch((error) => {
+        console.error(error)
+    });
+
+    // Este GET armazena o valor da ultima chave gravada no banco.
     get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
         if (snapshot.exists()) {
           const v = Object.values(snapshot.val())
@@ -863,79 +894,6 @@ window.addEventListener('load', e => {
         return
     })
 
-    get(ref(database, 'key-cargas-devolvidas/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          const cont =  Object.values(v)
-          contCargaDevovidaKey += cont[0]; 
-        }
-        return
-    }).catch((error) => {
-        console.error(error)
-      });
-
-    get(ref(database, 'key-cargas-listadas-screen/')).then((snapshot) => {
-        if (snapshot.exists()) {
-          const v = Object.values(snapshot.val())
-          const cont =  Object.values(v)
-          contCargarListadaKey += cont[0]; 
-        }
-        return
-    }).catch((error) => {
-        console.error(error)
-      });
-
-    get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
-        const cargas = Object.values(snapshot.val())
-        cargas.forEach(e => {
-            const date = e.date;
-            const hour = e.hora;
-            const cont = '';
-
-            const time = ajustDataHora(hour, date);
-
-            const printCarga = new CreateObjectCargo(e);
-            const cellTime = printCarga.printObject();
-
-            const newTime = new CreateTimer(cellTime, time, cont);
-            newTime.start()
-        
-            cargasPuxar.push(e);
-        })
-    }).catch((error) => {
-        console.error(error)
-      });
-
-    get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
-        const cargas = Object.values(snapshot.val())
-        cargas.forEach(e => {
-            cargasPuxadas.push(e);
-        })
-
-        if (scr >= 700) {
-            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
-            totalCargaPuxar.innerHTML = calcCargasPuxar();
-        }
-    }).catch((error) => {
-        console.error(error)
-      });
-    
-      
-    /*const cPuxado = ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)
-    onValue(cPuxado, (snapshot) => {
-        const cargas = Object.values(snapshot.val())
-      
-
-        //if (scr >= 700) totalCargaPuxadas.innerHTML = calcCargasPuxadas();    
-    })
-
-    const cPuxar = ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`);
-    onValue(cPuxar, (snapshot) => {
-        const cargas = Object.values(snapshot.val())
-        
-
-       // if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar();
-    })*/
 })
 
 window.addEventListener('beforeprint', () => {
