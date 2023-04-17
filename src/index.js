@@ -698,10 +698,8 @@ document.addEventListener('click', e => {
             timer.startDateNow();
 
             // Verifica to tamanho da tela, caso seja atendida faz a impressão dos valores cargas a puxar e cargas puxadas.
-            if (scr >= 700) {
-                totalCargaPuxadas.innerHTML = calcCargasPuxadas();
-                totalCargaPuxar.innerHTML = calcCargasPuxar();
-            }
+            console.log(cargasPuxar)
+            if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar();
         });
     }
 
@@ -773,16 +771,21 @@ document.addEventListener('click', e => {
         if (scr <= 700) removeComponent() // Mobie.
 
         get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+            // Recebendo os dados do DB.
             const cargas = Object.values(snapshot.val())
             const lestCarga = cargas.length -1;
-                
+        
+            // Remove o ultimo dado do array.
             cargasPuxar.pop(cargas[lestCarga]);
-    
-            if (scr >= 700) {
-                totalCargaPuxar.innerHTML = calcCargasPuxar();
-            }
+            // Se o tamanho da tela for maior que 700px, add status do puxa das cargas.
+            console.log(cargasPuxar)
+            if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar(); 
+            
+            // Caso aja algum erro no retorno da requisicão.
         }).catch((error) => {
-            console.error(error)
+            totalCargaPuxar.innerHTML = '0'; 
+            cargasPuxar.pop();
+            console.error('Não há dados!')
           });
 
         get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
@@ -864,12 +867,14 @@ window.addEventListener('load', e => {
         }
 
     }).catch((error) => {
-        console.error(error)
+        console.error('Não há dados!')
     });
 
     // Busca todas as cargas que foram liberadas que ja foram retiradas.
     get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
     
+        if (!snapshot.exists()) return
+
         // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
         const cargas = Object.values(snapshot.val())
         cargas.forEach(e => {
@@ -881,7 +886,7 @@ window.addEventListener('load', e => {
             totalCargaPuxadas.innerHTML = calcCargasPuxadas();
         }
     }).catch((error) => {
-        console.error(error)
+        console.error('Não há dados')
     });
 
     // Este GET armazena o valor da ultima chave gravada no banco.
