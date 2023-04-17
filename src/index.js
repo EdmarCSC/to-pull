@@ -34,10 +34,11 @@ const inputQtPallet = document.querySelector('.input-pallets');
 
 const cargasPuxar = [];
 const cargasPuxadas = [];
-let dateNow; 
 
+let cargaToPrint;
+let aguardEtq;
+let dateNow; 
 let scr;
-let toPrint;
 let componentOfRemove; 
 
 let idCarga = 1;
@@ -95,17 +96,6 @@ class CreateObjectCargo {
         const cellTime = createComponent(div, clsCell, clsTime, this.startingTime)
         const cellId = createComponent(div, clsCell, clsIdCarga, this.id)
 
-        /*cellFilial.innerHTML = this.filial;
-        cellAgenda.innerHTML = this.agenda;
-        cellBox.innerHTML = this.box;
-        cellControle.innerHTML = this.controle;
-        cellMaterial.innerHTML = this.material;
-        cellQtPallet.innerHTML = this.qtPallet;
-        cellDate.innerHTML = this.date; 
-        cellHora.innerHTML = this.hora;
-        cellTime.innerHTML = startingTime;
-        cellId.innerHTML = this.id;*/
-
         lineObject.appendChild(cellFilial);
         lineObject.appendChild(cellAgenda)
         lineObject.appendChild(cellBox);
@@ -123,18 +113,21 @@ class CreateObjectCargo {
     }
 } 
 
+// Controle o status de cargas retiradas.
 function calcCargasPuxadas() {
     const numbersOfCargas = cargasPuxadas.length;
 
     return numbersOfCargas;
 }
 
+// Controle o status de cargas há retirar.
 function calcCargasPuxar() {
     const numbersOfCargas = cargasPuxar.length;
 
     return numbersOfCargas;
 }
 
+// Cria o objeto e envia para o DB carga há retirar.
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
     set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
         filial: filial,
@@ -149,6 +142,7 @@ function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour
     });
 }
 
+// Cria o objeto e envia para o DB carga retiradas.
 function setHistoricoCarga(carga, valueTime) {
     set(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${carga.id}`), {
         filial: carga.filial,
@@ -164,6 +158,7 @@ function setHistoricoCarga(carga, valueTime) {
     });
 }
 
+// Verifica se todos os inputs foram preechidos
 function validateDataInputs() {
     if (!inputFilial.value) {
         inputFilial.focus();
@@ -218,6 +213,8 @@ function cargaDevolvida(element) {
     });
 }
 
+
+// Cria o id de cada carga inserida no DB cargas há puxar.
 function contCarga(cont) {
     set(ref(database, 'key-cargas-tst/'), {
        cont: cont
@@ -248,6 +245,7 @@ function getDataCells(cls) {
     return valuesCells
 }
 
+// Responsavel add zero a esquerda na data e hora.
 function addZero (zero) {
     if (zero < 10) {
     zero = '0'+zero;
@@ -256,6 +254,8 @@ function addZero (zero) {
     return zero;
 }    
 
+
+// Cria o objeto hora.
 function getDate() {
     const date = new Date();
     let da = 1;
@@ -268,6 +268,7 @@ function getDate() {
     return dataAtual
 }
 
+// Cria o objeto data.
 function getHour() {
     const hour = new Date();
     const hr = addZero(hour.getHours());
@@ -338,6 +339,8 @@ class CreateTimer {
   }
 }
 
+
+// Responsavel capturar a data e hora atual 
 class CreateTimerNow {
     constructor (cellTime, second, time) {
         this.cellTime = cellTime,
@@ -370,6 +373,7 @@ class CreateTimerNow {
     }
 }
 
+// Cria o objeto carga.
 class Carga {
     constructor(filial, agenda, box, controle, material, qtPallets, data, hora) {
         this.filial = filial;
@@ -383,6 +387,7 @@ class Carga {
     }
 }
 
+// Cria os elementos nescessarios para a construçao do layout
 function createComponent(el, cls, id, value) {
     const p = document.createElement('p');
     p.innerHTML = value
@@ -542,7 +547,7 @@ function getDataToPrint(req) {
         const propChild = lestChild.childNodes;
         
         propChild.forEach(e => {
-            if (e.classList.contains('cell')) valuesOfChilds.push(e.innerHTML)
+            if (e.classList.contains('cell')) valuesOfChilds.push(e.textContent)
         })
 
         return valuesOfChilds
@@ -550,7 +555,7 @@ function getDataToPrint(req) {
         const dataToPrint = componentOfRemove.childNodes;
         
         dataToPrint.forEach(e => {
-            if (e.classList.contains('cell')) valuesOfChilds.push(e.innerHTML)
+            if (e.classList.contains('cell')) valuesOfChilds.push(e.textContent)
         })
 
         return valuesOfChilds
@@ -558,23 +563,40 @@ function getDataToPrint(req) {
     
 }
 
-function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
-    const titleOfPrint = ['FILIAL:', 'AGENDA:', 'DOCA:', 'CONTROLE:', 'PALLETS:', 'Hora:']
+function docOfPrintAgEtq() {
+    const titleOfPrint = ['ATENÇÃO!', 'Aguardando etiquetas.']
 
     const bodyOfPrint = createComponent('div', 'body-of-print')
-    const numberFilial = createComponent('div', 'number-filial')
-    const numberAgenda = createComponent('div', 'number-agenda')
-    const numberDoca = createComponent('div', 'number-doca')
-    const numberControle = createComponent('div', 'number-controle')
-    const numberOfPallets = createComponent('div', 'number-of-pallets')
-    const timeRequest = createComponent('div', 'time-request')
+    const aten = createComponent('div', 'warn')
+    const desc = createComponent('div', 'description')
 
-    numberFilial.innerHTML = `${titleOfPrint[0]} ${filial}`;
-    numberAgenda.innerHTML = `${titleOfPrint[1]} ${agenda}`;
-    numberDoca.innerHTML = `${titleOfPrint[2]} ${doca}`;
-    numberControle.innerHTML = `${titleOfPrint[3]} ${controle}`;
-    numberOfPallets.innerHTML = `${titleOfPrint[4]} ${pallets}`;
-    timeRequest.innerHTML = `${titleOfPrint[5]} ${hora}`;
+    aten.innerHTML = `${titleOfPrint[0]}`;
+    desc.innerHTML = `${titleOfPrint[1]}`;
+
+    bodyOfPrint.appendChild(aten)
+    bodyOfPrint.appendChild(desc)
+
+    bodyMain.appendChild(bodyOfPrint)
+}
+
+
+function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
+    const titleOfPrint = ['FILIAL: ', 'AGENDA: ', 'DOCA: ', 'CONTROLE: ', 'PALLETS: ', 'HORA: ']
+
+    const bodyOfPrint = createComponent('div', 'body-of-print')
+    const numberFilial = createComponent('p', 'number-filial')
+    const numberAgenda = createComponent('p', 'number-agenda')
+    const numberDoca = createComponent('p', 'number-doca')
+    const numberControle = createComponent('p', 'number-controle')
+    const numberOfPallets = createComponent('p', 'number-of-pallets')
+    const timeRequest = createComponent('p', 'time-request')
+
+    numberFilial.textContent = `${titleOfPrint[0]}${filial}`;
+    numberAgenda.textContent = `${titleOfPrint[1]}${agenda}`;
+    numberDoca.textContent = `${titleOfPrint[2]}${doca}`;
+    numberControle.textContent = `${titleOfPrint[3]}${controle}`;
+    numberOfPallets.textContent = `${titleOfPrint[4]}${pallets}`;
+    timeRequest.textContent = `${titleOfPrint[5]}${hora}`;
 
     bodyOfPrint.appendChild(numberFilial)
     bodyOfPrint.appendChild(numberAgenda)
@@ -584,6 +606,8 @@ function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
     bodyOfPrint.appendChild(timeRequest)
 
     bodyMain.appendChild(bodyOfPrint)
+
+    cargaToPrint = '';
 }
 
 function mobileDialogBox() {
@@ -781,10 +805,11 @@ document.addEventListener('click', e => {
             console.log(cargasPuxar)
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar(); 
             
-            // Caso aja algum erro no retorno da requisicão.
+            // Caso não tenha dados no retorno da requisicão.
         }).catch((error) => {
             totalCargaPuxar.innerHTML = '0'; 
             cargasPuxar.pop();
+
             console.error('Não há dados!')
           });
 
@@ -797,9 +822,9 @@ document.addEventListener('click', e => {
         if (scr >= 700) {
             totalCargaPuxadas.innerHTML = calcCargasPuxadas();
         }
-    }).catch((error) => {
+        }).catch((error) => {
         console.error(error)
-      });
+        });
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
@@ -821,12 +846,17 @@ document.addEventListener('click', e => {
     }
 
     if (el.classList.contains('print') || el.classList.contains('printer')) {
-        toPrint = getDataToPrint() 
+        cargaToPrint = getDataToPrint();
         print()
     }
 
     if (el.classList.contains('m-btn-print-dialog-box') || el.classList.contains('btn-desk-print-dialog-box')) {
-        toPrint = getDataToPrint(true) 
+        cargaToPrint = getDataToPrint(true) 
+        print()
+    }
+
+    if (el.classList.contains('btn-ag-etiquetas')) {
+        aguardEtq = docOfPrintAgEtq()
         print()
     }
 });
@@ -902,11 +932,15 @@ window.addEventListener('load', e => {
 })
 
 window.addEventListener('beforeprint', () => {
-    createDocOfPrint(toPrint[0], toPrint[1], toPrint[2], toPrint[3], toPrint[5], toPrint[7])
+    if (cargaToPrint)  createDocOfPrint(cargaToPrint[0], cargaToPrint[1], cargaToPrint[2], cargaToPrint[3], cargaToPrint[5], cargaToPrint[7])
+    if (aguardEtq) docOfPrintAgEtq(aguardEtq[0], aguardEtq[1])
     removeComponent('true');
 })
 
 window.addEventListener('afterprint', () => {
     const rmBodyOfPrint = document.querySelector('.body-of-print');
     rmBodyOfPrint.remove()
+
+    inputFilial.focus()
+
 })
