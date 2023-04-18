@@ -348,6 +348,7 @@ body {
 .footer-box button:hover {
     background-color: var(--main-bg-color-hover);
 }
+
 @media (max-width: 950px){
     .container-main {
         display: grid;

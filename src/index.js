@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import '../style/index.css';
+import { utils, read, writeFileXLSX } from "xlsx";
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, get, remove } from "firebase/database";
 
@@ -213,7 +214,6 @@ function cargaDevolvida(element) {
     });
 }
 
-
 // Cria o id de cada carga inserida no DB cargas há puxar.
 function contCarga(cont) {
     set(ref(database, 'key-cargas-tst/'), {
@@ -253,7 +253,6 @@ function addZero (zero) {
     
     return zero;
 }    
-
 
 // Cria o objeto hora.
 function getDate() {
@@ -338,7 +337,6 @@ class CreateTimer {
     }, 1000);
   }
 }
-
 
 // Responsavel capturar a data e hora atual 
 class CreateTimerNow {
@@ -578,7 +576,6 @@ function docOfPrintAgEtq() {
 
     bodyMain.appendChild(bodyOfPrint)
 }
-
 
 function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
     const titleOfPrint = ['FILIAL: ', 'AGENDA: ', 'DOCA: ', 'CONTROLE: ', 'PALLETS: ', 'HORA: ']
@@ -858,6 +855,70 @@ document.addEventListener('click', e => {
     if (el.classList.contains('btn-ag-etiquetas')) {
         aguardEtq = docOfPrintAgEtq()
         print()
+    }
+
+    if (el.classList.contains('btn-backday')) {
+        const dayNow = dateNow.slice(0, 2); 
+        let backDay = 0
+        backDay = +dayNow - 1
+
+        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
+            // Se não houver carga encerra o processo.
+            if (!snapshot.exists()) return
+    
+            // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
+            const cargas = Object.values(snapshot.val())
+            cargas.forEach(e => {
+                let cont = 0
+                // Objeto array global que armazena todas as cargas obtdas pelo metodo GET.
+                cargasPuxar.push(e);
+                // cria o objeto da carga.
+                const carga = new CreateObjectCargo(e);
+                // Coleta o retorne do objeto carga (Celula Time para passar para gerador do time). 
+                const cellTime =  carga.printObject();
+                // Gerador do time.
+                const tm = new CreateTimer(cellTime, e.date, e.hora, cont) 
+                tm.start();
+            })
+    
+            // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas a serem puchadas.
+            if (scr >= 700) {
+                totalCargaPuxar.innerHTML = calcCargasPuxar();
+            }
+    
+        }).catch((error) => {
+            console.error('Não há dados!')
+        });
+
+        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
+    
+        if (!snapshot.exists()) return
+
+        // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
+        const cargas = Object.values(snapshot.val())
+        cargas.forEach(e => {
+            cargasPuxadas.push(e);
+        })
+
+        // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas que foram puchadas.
+        if (scr >= 700) {
+            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+        }
+        }).catch((error) => {
+        console.error('Não há dados')
+        });
+    
+    }
+
+    // Evento responsavel por capiturar os dados das cargas e expotar para uma planilha eletronica.
+    if (el.classList.contains('btn-xlsx')) {
+        const worksheet = utils.json_to_sheet(cargasPuxar);
+        const workbook = utils.book_new();
+        utils.book_append_sheet(workbook, worksheet, "Dates");
+
+        utils.sheet_add_aoa(worksheet, [["Filial", "Agenda", "Doca", "Controle", "Material", "Pallets", "Data", "Hora", "Tempo"]], { origin: "A1" });
+
+        writeFileXLSX(workbook, "planilha-cargas.xlsx");
     }
 });
 
