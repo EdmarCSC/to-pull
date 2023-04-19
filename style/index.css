@@ -349,6 +349,19 @@ body {
     background-color: var(--main-bg-color-hover);
 }
 
+.btn-xlsx {
+    display: none;
+    animation: enable-btn 0.8s ease-in both running;
+}
+
+@keyframes enable-btn {
+    from {
+        opacity: 0;
+    } to {
+        opacity: 10;
+    }
+} 
+
 @media (max-width: 950px){
     .container-main {
         display: grid;

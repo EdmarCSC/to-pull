@@ -858,6 +858,9 @@ document.addEventListener('click', e => {
     }
 
     if (el.classList.contains('btn-backday')) {
+        const btnPrintXlsx = document.querySelector('.btn-xlsx');
+        btnPrintXlsx.style.display = 'inline';
+
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
         backDay = +dayNow - 1
@@ -912,6 +915,8 @@ document.addEventListener('click', e => {
 
     // Evento responsavel por capiturar os dados das cargas e expotar para uma planilha eletronica.
     if (el.classList.contains('btn-xlsx')) {
+        el.style.display = 'none';
+
         const worksheet = utils.json_to_sheet(cargasPuxar);
         const workbook = utils.book_new();
         utils.book_append_sheet(workbook, worksheet, "Dates");
