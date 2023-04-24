@@ -719,7 +719,6 @@ document.addEventListener('click', e => {
             timer.startDateNow();
 
             // Verifica to tamanho da tela, caso seja atendida faz a impressão dos valores cargas a puxar e cargas puxadas.
-            console.log(cargasPuxar)
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar();
         });
     }
@@ -733,33 +732,47 @@ document.addEventListener('click', e => {
     }
 
     if (el.classList.contains('transpicking')){
-        const bodyList = document.querySelector('.body')
+        const bodyList = document.querySelector('.body');
+        const boxStatus = document.querySelector('.m-status');
                 
-        contIn.classList.add('inp')
+        contIn.classList.add('inp');
 
-        if (!bodyList.classList.contains('visible')){
-            bodyList.classList.add('visible')
-        }
+        if (boxStatus.classList.contains('s-visible')) boxStatus.classList.remove('s-visible');
+        if (!bodyList.classList.contains('visible')) bodyList.classList.add('visible');
+
     }
 
     if (el.classList.contains('recebimento')){
-        const bodyList = document.querySelector('.body')
+        const bodyList = document.querySelector('.body');
+        const boxStatus = document.querySelector('.m-status');
         
-        contIn.classList.remove('inp')
+        contIn.classList.remove('inp');
         
-        if (bodyList.classList.contains('visible')){
-            bodyList.classList.remove('visible')
+        if (boxStatus.classList.contains('s-visible')) boxStatus.classList.remove('s-visible');
+        if (bodyList.classList.contains('visible')) bodyList.classList.remove('visible');
+    }
+
+    if (el.classList.contains('status')){
+        const tCargaPuxar = document.querySelector('.m-cargas-puxar');
+        const tCargaPuxadas = document.querySelector('.m-cargas-puxadas');
+        const boxStatus = document.querySelector('.m-status');
+        
+        if (!boxStatus.classList.contains('s-visible')){
+            boxStatus.classList.add('s-visible');
         }
+
+        tCargaPuxar.innerHTML = calcCargasPuxar();
+        tCargaPuxadas.innerHTML = calcCargasPuxadas();
     }
 
     if (el.classList.contains('cell')) {
         componentOfRemove = el.parentNode;
         
-        //const clsId = 'id';
+       // const clsId = 'id';
         
         if (scr > 700) dialogBox();
         
-        //const valueId = getDataCells(clsId);
+       // const valueId = getDataCells(clsId);
         
         if (scr <= 700) mobileDialogBox();
     }
@@ -799,7 +812,6 @@ document.addEventListener('click', e => {
             // Remove o ultimo dado do array.
             cargasPuxar.pop(cargas[lestCarga]);
             // Se o tamanho da tela for maior que 700px, add status do puxa das cargas.
-            console.log(cargasPuxar)
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar(); 
             
             // Caso não tenha dados no retorno da requisicão.
@@ -811,17 +823,22 @@ document.addEventListener('click', e => {
           });
 
         get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
-        const cargas = Object.values(snapshot.val())
-        const lestCarga = cargas.length -1;
-            
-        cargasPuxadas.push(cargas[lestCarga]);
+            const cargas = Object.values(snapshot.val())
+            const lestCarga = cargas.length -1;
+                
+            cargasPuxadas.push(cargas[lestCarga]);
 
-        if (scr >= 700) {
-            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
-        }
+            if (scr >= 700) totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+        
         }).catch((error) => {
-        console.error(error)
+            console.error(error)
         });
+
+        if ( src < 700) {
+            
+            tCargaPuxar.innerHTML = calcCargasPuxar();
+            tCargaPuxadas.innerHTML = calcCargasPuxadas();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+        }
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
@@ -859,7 +876,9 @@ document.addEventListener('click', e => {
 
     if (el.classList.contains('btn-backday')) {
         const btnPrintXlsx = document.querySelector('.btn-xlsx');
-        btnPrintXlsx.style.display = 'inline';
+        
+        listData.childNodes().remove()
+        //listData.innerHTML = '';
 
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
@@ -868,7 +887,10 @@ document.addEventListener('click', e => {
         get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
             // Se não houver carga encerra o processo.
             if (!snapshot.exists()) return
-    
+            
+            // Instrução responsavel por dar visibildade ao btn-xlsx.
+            btnPrintXlsx.style.display = 'inline';
+
             // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
             const cargas = Object.values(snapshot.val())
             cargas.forEach(e => {
@@ -915,6 +937,8 @@ document.addEventListener('click', e => {
 
     // Evento responsavel por capiturar os dados das cargas e expotar para uma planilha eletronica.
     if (el.classList.contains('btn-xlsx')) {
+    
+        // Instrução responsavel por desabiltar visibildade ao btn-xlsx.
         el.style.display = 'none';
 
         const worksheet = utils.json_to_sheet(cargasPuxar);

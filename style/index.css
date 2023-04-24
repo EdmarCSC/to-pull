@@ -264,7 +264,6 @@ body {
     grid-template-areas: "fl ag dc co ma pa dt hr tp";
     justify-items: center;
     align-items: center;
-    gap: 10px;
     color: var(--two-txt-colorr);
     border-bottom: 1px solid #00141d31;
     width: 100%;
@@ -321,6 +320,24 @@ body {
     height: 1px;
 }
 
+.m-status {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    position: absolute;
+    z-index: 7;
+    bottom: 0;
+    width: 100%;
+    height: 90vh;
+    background-color: var(--bg-list-carga);
+}
+
+.m-status div h4, .score {
+    font-size: x-large;
+}
+
 .footer {
     grid-area: footer;
     background-color: var(--second-bg-color);
@@ -372,6 +389,11 @@ body {
     .header-list h4 {
         font-size: 12px;
     }
+
+    .footer-box button {
+        display: none;
+    }
+    
 }
 
 @media (max-width: 700px){
@@ -436,6 +458,10 @@ body {
 
     .body {
         display: none;
+    }
+
+    .s-visible {
+        display: flex;
     }
 
     .visible {
@@ -575,6 +601,10 @@ body {
         max-height: 45px;
     }
 
+    .container-title-of-list {
+        border: none;
+    }
+
     .list-data {
         overflow-y: scroll;
         height: 100vh;
@@ -588,7 +618,7 @@ body {
 
     .list-data .line {
         display: grid;
-        grid-template-columns: .2fr 1fr;
+        grid-template-columns: .3fr 1fr;
         grid-template-rows: repeat(8, 1fr);
         grid-template-areas: "txt-values fl"
                              "txt-values ag"
@@ -606,7 +636,7 @@ body {
         z-index: 1;
         font-size: 16px;
     }
-
+   
     .container-title-of-list {
         grid-area: txt-values;
         display: flex;
@@ -638,6 +668,7 @@ body {
 
     .material {
         grid-area: mt;
+        justify-content: center;
     }
     
     .qt-pallets {
@@ -657,11 +688,18 @@ body {
     }
 
     .id {
+        display: none;
+        border: none;
         position: absolute;
         visibility: hidden;
         z-index: -3px;
         height: 1px;
     }    
+
+    .footer {
+        display: none;
+    }
+
 }
 
 @media print {
