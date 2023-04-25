@@ -36,6 +36,10 @@ const inputQtPallet = document.querySelector('.input-pallets');
 const cargasPuxar = [];
 const cargasPuxadas = [];
 
+const cargasPuxadasDiaanterior = [];
+const cargasPuxarDiaAnterior = [];
+
+
 let cargaToPrint;
 let aguardEtq;
 let dateNow; 
@@ -121,6 +125,12 @@ function calcCargasPuxadas() {
     return numbersOfCargas;
 }
 
+function calcCargasPuxadasDiaAnterior() {
+    const numbersOfCargas = cargasPuxadasDiaanterior.length;
+
+    return numbersOfCargas;
+}
+
 // Controle o status de cargas há retirar.
 function calcCargasPuxar() {
     const numbersOfCargas = cargasPuxar.length;
@@ -128,9 +138,16 @@ function calcCargasPuxar() {
     return numbersOfCargas;
 }
 
+function calcCargasPuxarDiaAnterior() {
+    const numbersOfCargas = cargasPuxarDiaAnterior.length;
+
+    return numbersOfCargas;
+}
+
+
 // Cria o objeto e envia para o DB carga há retirar.
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
-    set(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
+    set(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
         filial: filial,
         agenda: agenda,
         box: box,
@@ -216,13 +233,13 @@ function cargaDevolvida(element) {
 
 // Cria o id de cada carga inserida no DB cargas há puxar.
 function contCarga(cont) {
-    set(ref(database, 'key-cargas-tst/'), {
+    set(ref(database, 'key-cargas-puxar/'), {
        cont: cont
     });
 }
 
 function removeCargaLiberadas(id) {
-    remove(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${id}`), {
+    remove(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${id}`), {
     })
 }
 
@@ -697,7 +714,7 @@ document.addEventListener('click', e => {
         idCarga++;
 
         // Faz o get no DB
-        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
         const cargas = Object.values(snapshot.val())
 
             // Coleta o index da ultima carga. 
@@ -785,7 +802,7 @@ document.addEventListener('click', e => {
         const valueId = getDataCells(clsId);
         let historyOfCarga 
         
-        // Faz a busca da cara especifca com o valor do ID obitido atravez de insyrução anterior.
+        // Faz a busca da cara especifca com o valor do ID obitido atravez de instrução anterior.
         cargasPuxar.forEach(carga => {
             if (carga.id === Number(valueId)) {
                 historyOfCarga =  carga;   
@@ -804,13 +821,14 @@ document.addEventListener('click', e => {
         if (scr > 700) removeComponent() // Desktop. 
         if (scr <= 700) removeComponent() // Mobie.
 
-        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
             // Recebendo os dados do DB.
             const cargas = Object.values(snapshot.val())
             const lestCarga = cargas.length -1;
         
             // Remove o ultimo dado do array.
             cargasPuxar.pop(cargas[lestCarga]);
+            
             // Se o tamanho da tela for maior que 700px, add status do puxa das cargas.
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar(); 
             
@@ -826,6 +844,7 @@ document.addEventListener('click', e => {
             const cargas = Object.values(snapshot.val())
             const lestCarga = cargas.length -1;
                 
+            console.log(cargas)
             cargasPuxadas.push(cargas[lestCarga]);
 
             if (scr >= 700) totalCargaPuxadas.innerHTML = calcCargasPuxadas();
@@ -833,12 +852,6 @@ document.addEventListener('click', e => {
         }).catch((error) => {
             console.error(error)
         });
-
-        if ( src < 700) {
-            
-            tCargaPuxar.innerHTML = calcCargasPuxar();
-            tCargaPuxadas.innerHTML = calcCargasPuxadas();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-        }
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
@@ -876,18 +889,15 @@ document.addEventListener('click', e => {
 
     if (el.classList.contains('btn-backday')) {
         const btnPrintXlsx = document.querySelector('.btn-xlsx');
-        
-        listData.childNodes().remove()
-        //listData.innerHTML = '';
-
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
         backDay = +dayNow - 1
 
-        get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
             // Se não houver carga encerra o processo.
             if (!snapshot.exists()) return
             
+            listData.textContent = '';
             // Instrução responsavel por dar visibildade ao btn-xlsx.
             btnPrintXlsx.style.display = 'inline';
 
@@ -896,7 +906,7 @@ document.addEventListener('click', e => {
             cargas.forEach(e => {
                 let cont = 0
                 // Objeto array global que armazena todas as cargas obtdas pelo metodo GET.
-                cargasPuxar.push(e);
+                cargasPuxarDiaAnterior.push(e);
                 // cria o objeto da carga.
                 const carga = new CreateObjectCargo(e);
                 // Coleta o retorne do objeto carga (Celula Time para passar para gerador do time). 
@@ -907,9 +917,7 @@ document.addEventListener('click', e => {
             })
     
             // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas a serem puchadas.
-            if (scr >= 700) {
-                totalCargaPuxar.innerHTML = calcCargasPuxar();
-            }
+            if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxarDiaAnterior();
     
         }).catch((error) => {
             console.error('Não há dados!')
@@ -922,12 +930,12 @@ document.addEventListener('click', e => {
         // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
         const cargas = Object.values(snapshot.val())
         cargas.forEach(e => {
-            cargasPuxadas.push(e);
+            cargasPuxadasDiaanterior.push(e);
         })
 
         // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas que foram puchadas.
         if (scr >= 700) {
-            totalCargaPuxadas.innerHTML = calcCargasPuxadas();
+            totalCargaPuxadas.innerHTML = calcCargasPuxadasDiaAnterior();
         }
         }).catch((error) => {
         console.error('Não há dados')
@@ -941,7 +949,7 @@ document.addEventListener('click', e => {
         // Instrução responsavel por desabiltar visibildade ao btn-xlsx.
         el.style.display = 'none';
 
-        const worksheet = utils.json_to_sheet(cargasPuxar);
+        const worksheet = utils.json_to_sheet(cargasPuxadas);
         const workbook = utils.book_new();
         utils.book_append_sheet(workbook, worksheet, "Dates");
 
@@ -962,7 +970,7 @@ window.addEventListener('load', e => {
     dateNow = getDate();
 
     // Busca todas as cargas que foram liberadas que ainda não retiradas.
-   get(ref(database, `cargas-tst/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+   get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
         // Se não houver carga encerra o processo.
         if (!snapshot.exists()) return
 
@@ -1010,7 +1018,7 @@ window.addEventListener('load', e => {
     });
 
     // Este GET armazena o valor da ultima chave gravada no banco.
-    get(ref(database, 'key-cargas-tst/')).then((snapshot) => {
+    get(ref(database, 'key-cargas-puxar/')).then((snapshot) => {
         if (snapshot.exists()) {
           const v = Object.values(snapshot.val())
           const cont =  Object.values(v)
