@@ -94,7 +94,7 @@ class CreateObjectCargo {
         const cellAgenda = createComponent(div, clsCell, clsAgenda, this.agenda);
         const cellBox = createComponent(div, clsCell, clsBox, this.box);
         const cellControle = createComponent(div, clsCell, clsControle, this.controle);
-        const cellMaterial = createComponent(div, clsCell, clsMaterial, this.material);
+        const cellMaterial = createComponent(div, clsCell, clsMaterial, this.material.toUpperCase());
         const cellQtPallet = createComponent(div, clsCell, clsPallets, this.qtPallet);
         const cellDate = createComponent(div, clsCell, clsData, this.date);
         const cellHora = createComponent(div, clsCell, clsHora, this.hora);
@@ -739,7 +739,7 @@ document.addEventListener('click', e => {
 
             // Verifica to tamanho da tela, caso seja atendida faz a impressão dos valores cargas a puxar e cargas puxadas.
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar();
-        });
+        });                                                                                                                                                                                     
     }
 
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
