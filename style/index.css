@@ -30,7 +30,7 @@
                          'sidebar body'
                          'sidebar footer';
     width: 100%;
-    height: 100vh;
+    height: 100%;
 }
 
 .header {
@@ -254,7 +254,7 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    gap: 2px;
+    gap: 1px;
     margin-top: 22px;
 }
 
@@ -317,8 +317,8 @@ body {
 }
 
 .material {
-    justify-content: flex-end;
-    padding: 0 10px 0 3px;
+    justify-content: start;
+    padding: 0 0 0 1px;
 }
 
 .id {

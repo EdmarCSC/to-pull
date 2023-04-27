@@ -44,7 +44,7 @@ let cargaToPrint;
 let aguardEtq;
 let dateNow; 
 let scr;
-let componentOfRemove; 
+let cargaOfRemove; 
 
 let idCarga = 1;
 let contCargaDevovidaKey = 1
@@ -244,7 +244,7 @@ function removeCargaLiberadas(id) {
 }
 
 function getDataCells(cls) {
-    const dataCells = componentOfRemove.childNodes;
+    const dataCells = cargaOfRemove.childNodes;
     const valuesCells = []
     let id, time 
 
@@ -428,7 +428,7 @@ function removeComponent(cancel) {
     if (dlg != null) dlg.remove()
     if (dlgMobal != null) dlgMobal.remove()
 
-    componentOfRemove.remove();
+    cargaOfRemove.remove();
 
     dlg.remove();
 }
@@ -567,7 +567,7 @@ function getDataToPrint(req) {
 
         return valuesOfChilds
     } else {
-        const dataToPrint = componentOfRemove.childNodes;
+        const dataToPrint = cargaOfRemove.childNodes;
         
         dataToPrint.forEach(e => {
             if (e.classList.contains('cell')) valuesOfChilds.push(e.textContent)
@@ -700,9 +700,11 @@ document.addEventListener('click', e => {
         // Coleta os dados para a criação do Object carga.
         const date = getDate(); // Coleta a data atual.
         const hour = getHour(); // Celeta a hora atual.
+
+        const strUpperCase = inputMaterial.value;
         
         setCarga(inputFilial.value, inputAgenda.value, inputBox.value, 
-            inputControle.value, inputMaterial.value, inputQtPallet.value, date, hour); // Coleta os dados dos inputs.
+            inputControle.value, strUpperCase.toUpperCase(), inputQtPallet.value, date, hour); // Coleta os dados dos inputs.
         
         // Faz limpeza dos inputs após todos os dados serem capiturados.
         clearValueInputs();
@@ -783,13 +785,13 @@ document.addEventListener('click', e => {
     }
 
     if (el.classList.contains('cell')) {
-        componentOfRemove = el.parentNode;
+        cargaOfRemove = el.parentNode;
         
-       // const clsId = 'id';
-        
+        const clsId = 'id';
+        const clsTime = 'time'
         if (scr > 700) dialogBox();
         
-       // const valueId = getDataCells(clsId);
+        const valueId = getDataCells(clsId);
         
         if (scr <= 700) mobileDialogBox();
     }
@@ -855,7 +857,7 @@ document.addEventListener('click', e => {
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
-        if (!componentOfRemove.classList.contains('green')) {
+        if (!cargaOfRemove.classList.contains('green')) {
             removeComponent('true');
             return
         }
@@ -863,7 +865,7 @@ document.addEventListener('click', e => {
         const dataObiject = getDataCells();
         cargaDevolvida(dataObiject)
 
-        removeGreen(componentOfRemove)
+        removeGreen(cargaOfRemove)
         
         const key = getDataCells()
         removeCargaRetiradas(key[8])
