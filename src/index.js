@@ -792,7 +792,6 @@ document.addEventListener('click', e => {
             const cellNode = el.parentNode;
             cargaOfRemove = cellNode.parentNode
         }
-        console.log(el)
         
         const clsId = 'id';
         const clsTime = 'time'
