@@ -144,7 +144,6 @@ function calcCargasPuxarDiaAnterior() {
     return numbersOfCargas;
 }
 
-
 // Cria o objeto e envia para o DB carga há retirar.
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
     set(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
@@ -404,7 +403,9 @@ class Carga {
 
 // Cria os elementos nescessarios para a construçao do layout
 function createComponent(el, cls, id, value) {
+    const clsCellData = 'cell-data';
     const p = document.createElement('p');
+    p.classList.add(clsCellData)
     p.innerHTML = value
 
     const component = document.createElement(el);
@@ -784,8 +785,14 @@ document.addEventListener('click', e => {
         tCargaPuxadas.innerHTML = calcCargasPuxadas();
     }
 
-    if (el.classList.contains('cell')) {
-        cargaOfRemove = el.parentNode;
+    if (el.classList.contains('cell') || el.classList.contains('cell-data')) {
+        if (el.classList.contains('cell')) cargaOfRemove = el.parentNode;
+
+        if (el.classList.contains('cell-data')) {
+            const cellNode = el.parentNode;
+            cargaOfRemove = cellNode.parentNode
+        }
+        console.log(el)
         
         const clsId = 'id';
         const clsTime = 'time'
