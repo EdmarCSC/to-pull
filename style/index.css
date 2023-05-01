@@ -254,7 +254,6 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    gap: 1px;
     margin-top: 22px;
 }
 
@@ -344,6 +343,8 @@ body {
 
 .m-status div h4, .score {
     font-size: x-large;
+    position: relative;
+    top: 15px;
 }
 
 .footer {
@@ -618,6 +619,7 @@ body {
         height: 100vh;
         align-content: flex-start;
         margin-top: 0;
+        gap: 1px;
     }
 
     .header-list {

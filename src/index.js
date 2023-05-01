@@ -45,6 +45,7 @@ let aguardEtq;
 let dateNow; 
 let scr;
 let cargaOfRemove; 
+let lestDay;
 
 let idCarga = 1;
 let contCargaDevovidaKey = 1
@@ -120,7 +121,13 @@ class CreateObjectCargo {
 
 // Controle o status de cargas retiradas.
 function calcCargasPuxadas() {
-    const numbersOfCargas = cargasPuxadas.length;
+    let numbersOfCargas
+    
+    if (!lestDay) {
+        numbersOfCargas = cargasPuxadas.length;
+    } else {
+        numbersOfCargas = cargasPuxadasDiaanterior.length;
+    }
 
     return numbersOfCargas;
 }
@@ -133,8 +140,13 @@ function calcCargasPuxadasDiaAnterior() {
 
 // Controle o status de cargas há retirar.
 function calcCargasPuxar() {
-    const numbersOfCargas = cargasPuxar.length;
-
+    let numbersOfCargas
+    
+    if (!lestDay) {
+        numbersOfCargas = cargasPuxar.length;
+    } else {
+        numbersOfCargas = cargasPuxarDiaAnterior.length;
+    }
     return numbersOfCargas;
 }
 
@@ -160,8 +172,8 @@ function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour
 }
 
 // Cria o objeto e envia para o DB carga retiradas.
-function setHistoricoCarga(carga, valueTime) {
-    set(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${carga.id}`), {
+function setHistoricoCarga(carga, valueTime, data) {
+    set(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}/${carga.id}`), {
         filial: carga.filial,
         agenda: carga.agenda,
         box: carga.box,
@@ -237,8 +249,8 @@ function contCarga(cont) {
     });
 }
 
-function removeCargaLiberadas(id) {
-    remove(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${id}`), {
+function removeCargaLiberadas(id, data) {
+    remove(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}/${id}`), {
     })
 }
 
@@ -254,6 +266,9 @@ function getDataCells(cls) {
             if (e.classList.contains(cls)) time = e.textContent;       
         }
     })
+
+    console.log(id)
+    console.log(time)
     
     if (id) return id
     if (time) return time
@@ -805,37 +820,49 @@ document.addEventListener('click', e => {
     if (el.classList.contains('btn-confirm-dialog-box') || el.classList.contains('m-btn-confirm-dialog-box')) {
         const clsId = 'id'
         const clsTime = 'time'
+        const clsData = 'data'
+        let cargas 
         
+        if (lestDay) {
+            cargas = cargasPuxarDiaAnterior 
+        }else {
+            cargas =  cargasPuxar;
+        }
+
         // Coleta o id para a exclusão da carga tanto na tela quanto no DB.
         const valueId = getDataCells(clsId);
         let historyOfCarga 
         
         // Faz a busca da cara especifca com o valor do ID obitido atravez de instrução anterior.
-        cargasPuxar.forEach(carga => {
+        cargas.forEach(carga => {
             if (carga.id === Number(valueId)) {
                 historyOfCarga =  carga;   
             } 
         })
+
+        // Coleta a data para a fazer a busca no DB mediante a data.
+        let data = getDataCells(clsData);
         
         // Envia o ID para que possa ser remivido a carga no DB.
-        removeCargaLiberadas(valueId);
+        removeCargaLiberadas(valueId, data);
         
         // Coleta o tempo em que a carga ficou esperando para ser puxada.
         const valueTime = getDataCells(clsTime);
         // Envia tanto a cerga quanto o tempo para ser armazenada em um historico.
-        setHistoricoCarga(historyOfCarga, valueTime);        
+        setHistoricoCarga(historyOfCarga, valueTime, data);        
         
         // Remove da tela tanto a caixa de dialogo quanto a linha referente a carga.
         if (scr > 700) removeComponent() // Desktop. 
         if (scr <= 700) removeComponent() // Mobie.
 
-        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}`)).then((snapshot) => {
             // Recebendo os dados do DB.
             const cargas = Object.values(snapshot.val())
             const lestCarga = cargas.length -1;
         
             // Remove o ultimo dado do array.
-            cargasPuxar.pop(cargas[lestCarga]);
+            if (!lestDay) cargasPuxar.pop(cargas[lestCarga]);
+            if (lestDay) cargasPuxarDiaAnterior.pop(cargas[lestCarga]);
             
             // Se o tamanho da tela for maior que 700px, add status do puxa das cargas.
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxar(); 
@@ -848,18 +875,19 @@ document.addEventListener('click', e => {
             console.error('Não há dados!')
           });
 
-        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}`)).then((snapshot) => {
             const cargas = Object.values(snapshot.val())
             const lestCarga = cargas.length -1;
                 
-            console.log(cargas)
-            cargasPuxadas.push(cargas[lestCarga]);
+            if (!lestDay) cargasPuxadas.push(cargas[lestCarga]);
+            if (lestDay) cargasPuxadasDiaanterior.push(cargas[lestCarga]);
 
             if (scr >= 700) totalCargaPuxadas.innerHTML = calcCargasPuxadas();
         
         }).catch((error) => {
             console.error(error)
         });
+
     }
     
     if (el.classList.contains('btn-cancel-dialog-box') || el.classList.contains('m-btn-close-dialog-box')) {
@@ -899,12 +927,12 @@ document.addEventListener('click', e => {
         const btnPrintXlsx = document.querySelector('.btn-xlsx');
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
-        backDay = +dayNow - 1
+        backDay = +dayNow - 2
 
         get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
             // Se não houver carga encerra o processo.
             if (!snapshot.exists()) return
-            
+
             listData.textContent = '';
             // Instrução responsavel por dar visibildade ao btn-xlsx.
             btnPrintXlsx.style.display = 'inline';
@@ -928,40 +956,67 @@ document.addEventListener('click', e => {
             if (scr >= 700) totalCargaPuxar.innerHTML = calcCargasPuxarDiaAnterior();
     
         }).catch((error) => {
-            console.error('Não há dados!')
+            console.error('Não há dados!') 
         });
 
         get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
     
-        if (!snapshot.exists()) return
+            if (!snapshot.exists()) return
 
-        // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
-        const cargas = Object.values(snapshot.val())
-        cargas.forEach(e => {
-            cargasPuxadasDiaanterior.push(e);
-        })
+            // convere os dados JSON em array e itera sobre cada um deles criando o objeto para a impressão na tela.
+            const cargas = Object.values(snapshot.val())
+            cargas.forEach(e => {
+                cargasPuxadasDiaanterior.push(e);
+            })
 
-        // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas que foram puchadas.
-        if (scr >= 700) {
-            totalCargaPuxadas.innerHTML = calcCargasPuxadasDiaAnterior();
-        }
+            // Verifica se o tamanho da tela e igual ou maior que 700px, se for emprime a quantidade de cargas que foram puchadas.
+            if (scr >= 700) {
+                totalCargaPuxadas.innerHTML = calcCargasPuxadasDiaAnterior();
+            }
         }).catch((error) => {
-        console.error('Não há dados')
+            console.error('Não há dados')
         });
+
+        lestDay = 'lestDay';
     
     }
 
     // Evento responsavel por capiturar os dados das cargas e expotar para uma planilha eletronica.
     if (el.classList.contains('btn-xlsx')) {
     
+        const cargas = []
+        const list = Array.from(document.querySelectorAll('.line'));
+
+        list.forEach(el => {
+            const cells = []
+            let line = Array.from(el.childNodes)
+            line.forEach(e => {
+                cells.push(e.textContent)
+            })
+
+            const carga = {
+                filial: cells[0],
+                agenda: cells[1],
+                box: cells[2],
+                controle: cells[3],
+                material: cells[4],
+                qtPallet: cells[5],
+                data: cells[6],
+                hora: cells[7],
+                time: cells[8],
+                id: cells[9]
+            }
+            cargas.push(carga)
+        })  
+
         // Instrução responsavel por desabiltar visibildade ao btn-xlsx.
         el.style.display = 'none';
 
-        const worksheet = utils.json_to_sheet(cargasPuxadas);
+        const worksheet = utils.json_to_sheet(cargas);
         const workbook = utils.book_new();
         utils.book_append_sheet(workbook, worksheet, "Dates");
 
-        utils.sheet_add_aoa(worksheet, [["Filial", "Agenda", "Doca", "Controle", "Material", "Pallets", "Data", "Hora", "Tempo"]], { origin: "A1" });
+        utils.sheet_add_aoa(worksheet, [["Filial", "Agenda", "Box", "Controle", "Material", "Qt. Pallets", "Data", "Hora", "Tempo", "Id"]], { origin: "A1" });
 
         writeFileXLSX(workbook, "planilha-cargas.xlsx");
     }
