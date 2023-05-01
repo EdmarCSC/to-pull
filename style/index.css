@@ -341,10 +341,16 @@ body {
     background-color: var(--bg-list-carga);
 }
 
+.box-status-mobile {
+    position: absolute;
+    top: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
 .m-status div h4, .score {
     font-size: x-large;
-    position: relative;
-    top: 15px;
 }
 
 .footer {
