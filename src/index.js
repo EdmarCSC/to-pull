@@ -267,8 +267,6 @@ function getDataCells(cls) {
         }
     })
 
-    console.log(id)
-    console.log(time)
     
     if (id) return id
     if (time) return time
@@ -927,9 +925,9 @@ document.addEventListener('click', e => {
         const btnPrintXlsx = document.querySelector('.btn-xlsx');
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
-        backDay = +dayNow - 2
+        backDay = dayNow - 2
 
-        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${addZero(backDay)}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
             // Se não houver carga encerra o processo.
             if (!snapshot.exists()) return
 
@@ -959,7 +957,7 @@ document.addEventListener('click', e => {
             console.error('Não há dados!') 
         });
 
-        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${backDay}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
+        get(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${addZero(backDay)}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
     
             if (!snapshot.exists()) return
 
@@ -977,8 +975,7 @@ document.addEventListener('click', e => {
             console.error('Não há dados')
         });
 
-        lestDay = 'lestDay';
-    
+        lestDay = 'lestDay';    
     }
 
     // Evento responsavel por capiturar os dados das cargas e expotar para uma planilha eletronica.
