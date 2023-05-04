@@ -925,7 +925,7 @@ document.addEventListener('click', e => {
         const btnPrintXlsx = document.querySelector('.btn-xlsx');
         const dayNow = dateNow.slice(0, 2); 
         let backDay = 0
-        backDay = dayNow - 2
+        backDay = dayNow - 1
 
         get(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${addZero(backDay)}${dateNow.slice(3, 10).replace(/\//g, '')}`)).then((snapshot) => {
             // Se não houver carga encerra o processo.
