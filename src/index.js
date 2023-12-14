@@ -4,20 +4,23 @@ import { utils, read, writeFileXLSX } from "xlsx";
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, get, remove } from "firebase/database";
 
+// Key acess hosting and database
 const firebaseConfig = {
-    apiKey: "AIzaSyA3zTwrDNOZuarMb54dfxlHagB74VtvzE0",
-    authDomain: "mft046transp.firebaseapp.com",
-    databaseURL: "https://mft046transp-default-rtdb.firebaseio.com",
-    projectId: "mft046transp",
-    storageBucket: "mft046transp.appspot.com",
-    messagingSenderId: "715877080099",
-    appId: "1:715877080099:web:70a185cea9540527fee596",
-    measurementId: "G-BF655GBQTX"
+  apiKey: "AIzaSyB0IV0RAdqkE-TqR7scVzzaSXy8KfFFQc4",
+  authDomain: "topull-c7f63.firebaseapp.com",
+  projectId: "topull-c7f63",
+  storageBucket: "topull-c7f63.appspot.com",
+  messagingSenderId: "918543856050",
+  appId: "1:918543856050:web:7f867159815a1b4c3df4ab",
+  measurementId: "G-8V9JR8P40D"
 };
-const app = initializeApp(firebaseConfig);
 
+// initial app
+const app = initializeApp(firebaseConfig);
+// DB
 const database = getDatabase(app);
 
+// Selectors of struct layout
 const contMain = document.querySelector('.container-main');
 const bodyMain = document.querySelector('.main-body');
 const listData = document.querySelector('.list-data');
@@ -33,6 +36,7 @@ const inputControle = document.querySelector('.input-controle');
 const inputMaterial = document.querySelector('.input-material');
 const inputQtPallet = document.querySelector('.input-pallets');
 
+// vars to do status control of data input
 const cargasPuxar = [];
 const cargasPuxadas = [];
 
@@ -50,10 +54,11 @@ let lestDay;
 let idCarga = 1;
 let contCargaDevovidaKey = 1
 
+// Data to creat reader of box (container) list tesks
 const titleHeader = ['Filial', 'Agenda', 'Doca', 'Controle', 'Pallets', 'Data',
 'Hora', 'Timer']
 
-// class que constroi objeto carga. 
+// class to do object construct carga. 
 class CreateObjectCargo {
     constructor(carga) {
         this.filial = carga.filial;
@@ -68,7 +73,7 @@ class CreateObjectCargo {
         this.id = carga.id
     }
 
-    // Metodo que printa a carga na tela.
+    // Metody of print object in screen.
     printObject() {
         const div = 'div';
         const clsLine = 'line';
@@ -119,7 +124,7 @@ class CreateObjectCargo {
     }
 } 
 
-// Controle o status de cargas retiradas.
+// Function control status of withdrawal cargas .
 function calcCargasPuxadas() {
     let numbersOfCargas
     
@@ -138,7 +143,7 @@ function calcCargasPuxadasDiaAnterior() {
     return numbersOfCargas;
 }
 
-// Controle o status de cargas há retirar.
+// Function to remove control status of withdrawal cargas .
 function calcCargasPuxar() {
     let numbersOfCargas
     
@@ -156,7 +161,7 @@ function calcCargasPuxarDiaAnterior() {
     return numbersOfCargas;
 }
 
-// Cria o objeto e envia para o DB carga há retirar.
+//Procedimento responsavel por criar o objeto Carga e envia para o DB cargas-puxar.
 function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour) {
     set(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${dateNow.replace(/\//g, '')}/${idCarga}`), {
         filial: filial,
@@ -171,7 +176,7 @@ function setCarga(filial, agenda, box, controle, material, qtPallets, date, hour
     });
 }
 
-// Cria o objeto e envia para o DB carga retiradas.
+//Procedimento responsavel por criar o objeto Carga e envia para o DB carga-retiradas.
 function setHistoricoCarga(carga, valueTime, data) {
     set(ref(database, `cargas-historico/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}/${carga.id}`), {
         filial: carga.filial,
@@ -187,7 +192,7 @@ function setHistoricoCarga(carga, valueTime, data) {
     });
 }
 
-// Verifica se todos os inputs foram preechidos
+//Função responsavel por verifica se todos os inputs foram preechidos
 function validateDataInputs() {
     if (!inputFilial.value) {
         inputFilial.focus();
@@ -222,12 +227,16 @@ function validateDataInputs() {
     return true
 }
 
+//Procedimentp responsavel por controlar a chave (ID) de cada carga devolvida.
+// (cargas são devolvidas quando não foram concluidos os processos de conferência)
 function contCargaDevovidas(cont) {
     set(ref(database, 'key-cargas-devolvidas/'), {
         cont: cont
     });
 }
 
+
+//Procedmento responsavel por criar o objeto Carga e envia para o DB cargas-devolvida.
 function cargaDevolvida(element) {
     set(ref(database, 'cargas-devovidas/' + element[8]), {
         afilial: element[0],
@@ -242,18 +251,21 @@ function cargaDevolvida(element) {
     });
 }
 
-// Cria o id de cada carga inserida no DB cargas há puxar.
+//Procedimento responsavel por criar o id de cada carga inserida no DB cargas há puxar.
 function contCarga(cont) {
     set(ref(database, 'key-cargas-puxar/'), {
        cont: cont
     });
 }
 
+
+//Procedimento responsavel por remover da, tela principal, as Cargas que foram confirmadas como conferidas 
 function removeCargaLiberadas(id, data) {
     remove(ref(database, `cargas-puxar/${dateNow.slice(6, 10)}/${dateNow.slice(3, 5)}/${data.replace(/\//g, '')}/${id}`), {
     })
 }
 
+// Função responsavel por verificar qual a Carga a ser removida (atravez do identificador)
 function getDataCells(cls) {
     const dataCells = cargaOfRemove.childNodes;
     const valuesCells = []
@@ -274,7 +286,7 @@ function getDataCells(cls) {
     return valuesCells
 }
 
-// Responsavel add zero a esquerda na data e hora.
+//Função responsavel por add zero a esquerda na data e hora.
 function addZero (zero) {
     if (zero < 10) {
     zero = '0'+zero;
@@ -283,7 +295,7 @@ function addZero (zero) {
     return zero;
 }    
 
-// Cria o objeto hora.
+// Função que cria o objeto hora.
 function getDate() {
     const date = new Date();
     let da = 1;
@@ -296,7 +308,7 @@ function getDate() {
     return dataAtual
 }
 
-// Cria o objeto data.
+//Função que cria o objeto data.
 function getHour() {
     const hour = new Date();
     const hr = addZero(hour.getHours());
@@ -325,8 +337,9 @@ function ajustDataHora(hora, data) {
     return tempoAjustado
 }
 
-// Classe responsavel por gerar o tempo com base no tempo anterior caso a, pagina feche ou em uma tualização. 
-// assim o tempo sempre vai continuar de onde parou.
+// Classe responsavel por gerar o tempo com base no tempo anterior, quando o objeto foi criado, caso a, 
+    //pagina feche ou em uma tualização. 
+// permitindo assim que o time sempre continue de onde parou.
 class CreateTimer {
   constructor(cellTime, data, hora, cont) {
     this.cellTime = cellTime,
@@ -337,6 +350,7 @@ class CreateTimer {
     this.cont = cont
   }
   
+  // Metodo que gera a data atual
   create() {
     const oldHour = new Date(`${this.ano}-${this.mes}-${this.dia}T${this.hora}`);     
     const newHour =new Date();     
@@ -348,7 +362,8 @@ class CreateTimer {
 
     return hour
   } 
-  
+
+  //Metodo que inicia, que gera o funcionamento, da classe 
   start() {
     this.cont = setInterval(() => {
         this.segundos++;
@@ -367,7 +382,7 @@ class CreateTimer {
   }
 }
 
-// Responsavel capturar a data e hora atual 
+//Classe responsavel por capturar (criar) a data e hora atual 
 class CreateTimerNow {
     constructor (cellTime, second, time) {
         this.cellTime = cellTime,
@@ -375,6 +390,7 @@ class CreateTimerNow {
         this.time = time
     }
 
+    // Metodo que gera a data atual
     createDateNow() {
         const hour = new Date(this.second * 1000);     
         return hour.toLocaleTimeString ('pt-BR', { 
@@ -382,7 +398,8 @@ class CreateTimerNow {
             timeZone: 'UTC'
             });
       } 
-      
+    
+      //Metodo que inicia, que gera o funcionamento, da classe 
     startDateNow() {
         this.time = setInterval(() => {
             this.second++;
@@ -400,7 +417,7 @@ class CreateTimerNow {
     }
 }
 
-// Cria o objeto carga.
+// Classe modelo do objeto carga.
 class Carga {
     constructor(filial, agenda, box, controle, material, qtPallets, data, hora) {
         this.filial = filial;
@@ -414,7 +431,7 @@ class Carga {
     }
 }
 
-// Cria os elementos nescessarios para a construçao do layout
+//Função responsavel por criar os elementos nescessarios para a construçao do layout
 function createComponent(el, cls, id, value) {
     const clsCellData = 'cell-data';
     const p = document.createElement('p');
@@ -429,6 +446,7 @@ function createComponent(el, cls, id, value) {
     return component;
 }
 
+//Procedimento responsavel removar a caixa de dialogo caso ela seja ativada. 
 function removeComponent(cancel) {
  const dlg = document.querySelector('.dialog-box');
     const dlgMobal = document.querySelector('.mobile-dialog-box');
@@ -447,25 +465,34 @@ function removeComponent(cancel) {
     dlg.remove();
 }
 
+//Procedimento responsavel por adicionar a cor verde sobre elemento Carga (Que indica que a carga esta pronta para ser puxada ou retirada do setor).
 function addColorGreen(elementoPai) {
     if (elementoPai.classList.contains('red')) elementoPai.classList.remove('red');
     elementoPai.classList.add('green');
 }
 
+//Procedimento responsavel por remover a cor verde sobre elemento Carga 
+//(Que indica que a carga esta pronta (concluida) para ser puxada ou retirada do setor).
+//Caso a Carga não deveria estar sinalizada como concluida.
 function removeGreen(elementoPai) {
     if (elementoPai.classList.contains('green')) elementoPai.classList.remove('green');
 }
 
+//Função responsavel por remover a cor amarela sobre elemento Carga 
+//(Que indica que a carga esta pronta (concluida) para ser puxada ou retirada do setor).
 function addColorYellow(e) {
     const p = e.parentNode;
     return p.classList.add('yellow');
 }
-  
+
+//Função responsavel por remover a cor vermelha sobre elemento Carga 
+//(Que indica que a carga esta pronta (concluida) para ser puxada ou retirada do setor).
 function addColorRed(e) {
     const p = e.parentNode;
     return p.classList.add('red');
 }
 
+//Função responsavel por adicionar titulos identificador de cada elemento da Carga.
 function titleItemsList() {
     const titles = ['Filial', 'Agenda', 'Doca', 'Controle', 'Material', 'Pallets', 'Data', 'Hora', 'Tempo']
     
@@ -484,6 +511,7 @@ function titleItemsList() {
     return contTitile
 }
 
+//Procedimento responsavel por solicitar a impressão da verde
 function printCargaOfScreen(valueInputs) {
     let t;
     let contCell = 0;
@@ -521,6 +549,7 @@ function printCargaOfScreen(valueInputs) {
     inputFilial.focus();
 }
 
+//Função responsavel organizar os dador para guardar no DB
 function getData() {
     const data = [];
     inputFilialrEach(e => {
@@ -537,11 +566,14 @@ function getData() {
     return data
 }
 
+//Procedimento responsavel por remover a Carga do lista de retirada para enviar ao cargas-historico ou
+//devolver ao cargas-liberadas
 function removeCargaRetiradaconst (key) {
     remove(ref(database, 'cargas-retiradas/' + key), {
     })
 }
 
+//Procedimento respensavel listar e marcar os objetos Carga devem recebe a cor verde.
 function marcarItemLista(data) {
     const el = data
     const val = Object.values(el)
@@ -560,12 +592,14 @@ function marcarItemLista(data) {
     })
 }
 
+//Procedimento respensavel por limpar os inputs.
 function clearValueInputs() {
     inputs.forEach(element => {
         element.value = ''; 
     });
 }
 
+//Função responsavel por preparar os dados para ser impresso na tela. 
 function getDataToPrint(req) {
     const valuesOfChilds = []
 
@@ -592,6 +626,7 @@ function getDataToPrint(req) {
     
 }
 
+//Procedimento responsavel por realizar a impressão dos dados na tela (quando a carga não esta devidamente concluida). 
 function docOfPrintAgEtq() {
     const titleOfPrint = ['ATENÇÃO!', 'Aguardando etiquetas.']
 
@@ -608,6 +643,7 @@ function docOfPrintAgEtq() {
     bodyMain.appendChild(bodyOfPrint)
 }
 
+//Procedimento responsavel por realizar a impressão dos dados na tela (quando a carga esta totalmente liberada). 
 function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
     const titleOfPrint = ['FILIAL: ', 'AGENDA: ', 'DOCA: ', 'CONTROLE: ', 'PALLETS: ', 'HORA: ']
 
@@ -638,6 +674,7 @@ function createDocOfPrint(filial, agenda, doca, controle, pallets, hora) {
     cargaToPrint = '';
 }
 
+// Procedimento responsavel por gerar (criar) uma caixa de dialogo MOBILE onde solicita ao usuario qual ação Confirmar, imprimir, Devolver a carga. 
 function mobileDialogBox() {
     const dialogBox = createComponent('div', 'mobile-dialog-box');
     const mBtnConfirmDialogBox = createComponent('h2', 'm-btn-confirm-dialog-box');
@@ -656,6 +693,7 @@ function mobileDialogBox() {
     contMain.appendChild(dialogBox)
 }
 
+// Procedimento responsavel por gerar (criar) uma caixa de dialogo onde solicita ao usuario qual ação Confirmar, imprimir, Devolver a carga. 
 function dialogBox() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
     const dialogBox = createComponent('div', 'dialog-box');
     const h1 = createComponent('h3', 'title-dialog-box');
@@ -677,6 +715,7 @@ function dialogBox() {
     contMain.appendChild(dialogBox)
 }
 
+//É atrvez desta função que o sistema identifica qual carga deve sofrer alteração ou ate mesmo uma remoção.s
 function compareElementos(element) {
     const controle = element.controle;
     const agenda = element.agenda;
@@ -697,6 +736,7 @@ function compareElementos(element) {
     return false
 }
 
+// Evento responsavel ouvir e interagir com o usuario atravéz do click do mouse.
 document.addEventListener('click', e => {
     const el = e.target;
 
@@ -717,8 +757,9 @@ document.addEventListener('click', e => {
 
         const strUpperCase = inputMaterial.value;
         
+        // Coleta os dados dos inputs.
         setCarga(inputFilial.value, inputAgenda.value, inputBox.value, 
-            inputControle.value, strUpperCase.toUpperCase(), inputQtPallet.value, date, hour); // Coleta os dados dos inputs.
+            inputControle.value, strUpperCase.toUpperCase(), inputQtPallet.value, date, hour);
         
         // Faz limpeza dos inputs após todos os dados serem capiturados.
         clearValueInputs();
@@ -756,6 +797,7 @@ document.addEventListener('click', e => {
         });                                                                                                                                                                                     
     }
 
+    
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
         const menu = document.querySelector('.menu');
         const boxMenu = document.querySelector('.box-menu');
