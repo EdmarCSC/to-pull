@@ -797,7 +797,6 @@ document.addEventListener('click', e => {
         });                                                                                                                                                                                     
     }
 
-    
     if (el.classList.contains('menu') || el.classList.contains('li-menu') || el.classList.contains('abas')) {
         const menu = document.querySelector('.menu');
         const boxMenu = document.querySelector('.box-menu');
