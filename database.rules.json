@@ -1,9 +1,6 @@
 {
- "rules": {
-   "$uid": {
-      // Allow only authenticated content owners access to their data
-     ".read": true,
-     ".write": true
-    }
+  "rules": {
+    ".read": true,
+    ".write": true
   }
 }
