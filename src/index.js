@@ -3,7 +3,8 @@ import '../style/index.css';
 import { utils, read, writeFileXLSX } from "xlsx";
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, get, remove } from "firebase/database";
-import firebaseConfig from './apiKey'
+import { firebaseConfig } from './apiKey.js'
+
 // initial app
 const app = initializeApp(firebaseConfig);
 // DB
